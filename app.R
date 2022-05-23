@@ -2,7 +2,7 @@
 
 packages <- c("shiny","shinythemes","shinyjqui","gtsummary","tidyr",
               "dplyr","DT","ggplot2","ggpubr","tibble","survival","pheatmap",
-              "plotly","readr","shinycssloaders","survminer","gridExtra")
+              "readr","shinycssloaders","survminer","gridExtra")
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -33,12 +33,12 @@ GeneSet_File <- "GeneSet_List_HS.RData"
 
 
 
+
 ####----Read In Files----####
 
 ##--Meta--##
 meta <- as.data.frame(read_delim(MetaData_file,delim = '\t', col_names = T))
-#meta[is.na(meta)] <- "NA"
-#colnames(meta)[1] <- "SampleName"
+
 MetaParam <- as.data.frame(read_delim(MetaParam_File,delim = '\t',col_names = F))
 ## Subset meta columns by category
 metacol_samplenames <- MetaParam[which(MetaParam[,2] == "SampleName"),1]
@@ -69,13 +69,41 @@ loadRData <- function(fileName){
   load(fileName)
   get(ls()[ls() != "fileName"])
 }
-gs <- loadRData(GeneSet_File)
+
+# Read Gene set File provides GMT file
+ext <- tools::file_ext(GeneSet_File)
+if (ext == "gmt") {
+  gmt <- read.gmt(GeneSet_File)
+  colnames(gmt) <- c("term","gene")
+  gs <- list()
+  for (i in unique(gmt[,1])){
+    gs[[i]] <- gmt[gmt[,1] == i,]$gene
+  }
+}
+# If user provides RData list file
+if (ext == "RData") {
+  gs <- loadRData(GeneSet_File)
+}
+# If user provides tab-delim two-col file
+if  (ext == "tsv" | ext == "txt"){
+  gmt <- as.data.frame(read_delim(GeneSet_File, delim = '\t'))
+  colnames(gmt) <- c("term","gene")
+  gs <- list()
+  for (i in unique(gmt[,1])){
+    gs[[i]] <- gmt[gmt[,1] == i,]$gene
+  }
+}
+
+
+
+
 # Gene - "Gene Set"
 exprGenes <- rownames(expr)
 GeneGS_table <- data.frame(Genes = exprGenes)
 # Gene Set Table
 if (length(gs) == 94973) {
   GeneSetTable_File <- "GeneSet_CatTable.tsv"
+  
 }
 if (exists("GeneSetTable_File") == TRUE) {
   if (file.exists(GeneSetTable_File) == TRUE) {
