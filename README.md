@@ -41,12 +41,12 @@
   * The first column containing the users meta column names can be named however the user chooses, the **second column must have names matching the format provided below**.
     * For example, the survival ID column containing the 0/1 for events in the meta data could be nammed "OS" or "ID" or "OS.ID", but the column type in the second column meta parameter file must say "SurvivalID" for that specific column.
   * Column types and exmplinations:
-    * SampleName: Contains sample names matching exprssion data (ONLY ONE ALLOWED)
-    * SampleType: Contains a way to group and subset samples for further analysis (ONLY ONE ALLOWED and OPTIONAL)
-    * SurvivalTime: Contains the overall survival time for the samples (can be other types of survival)
-    * SurvivalID: Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
-    * Feature: Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
-    * Description: Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
+    * **SampleName:** Contains sample names matching exprssion data (ONLY ONE ALLOWED)
+    * **SampleType:** Contains a way to group and subset samples for further analysis (ONLY ONE ALLOWED and OPTIONAL)
+    * **SurvivalTime:** Contains the overall survival time for the samples (can be other types of survival)
+    * **SurvivalID:** Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
+    * **Feature:** Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
+    * **Description:** Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
   * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/Pan_ICI_ExampleData/Pan_ICI_iAtlas_MetaData_Params.txt)
 
 |  |  |
