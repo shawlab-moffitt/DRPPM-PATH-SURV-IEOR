@@ -62,9 +62,18 @@
 | Age | Description |
 | Center | Description |
 
-
 * **Gene Set File (.RData/.gmt/.tsv/.txt):**
+  * This is the file that contains the gene set names and genes for each gene set.
+  * This file is provided but can be replaced for a file of the users choice.
+  * An .RData list is the preferred format which is a named list of gene sets and genes. A script to generate this list is provided here: [insert link]
+    * The app also accepts gene sets in .gmt format or two-column tab-delimited .tsv/.txt format with the first column being the gene set name repeating for every gene symbol that would be placed in the second column. If either of these three formats are given athe app with automatically convert them to an RData list.
+  * The RData list provided ([GeneSet_List_HS.RData](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/GeneSet_Data/GeneSet_List_HS.RData)) contains over 94K gene sets from MSigDB, LINCS L1000 Cell Perturbations, and Cell Marker databases.
+ 
 * **Gene Set Master Table (Optional):**
+  * This is a optional three-column tab-delimited table the catagorizes and subcatagorizes the gene sets of the provided [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/GeneSet_Data/GeneSet_List_HS.RData)
+  * It allows for organization of the large gene set list in the UI of the gene set selection for the Shiny App.
+  * If not provided or using a user-provided gene set file, the gene set selection table only contains the gene set names.
+  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/GeneSet_Data/GeneSet_CatTable.tsv)
 
 # App Set-Up
 
