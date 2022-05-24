@@ -145,7 +145,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Survival Plot
 
-![alt text]https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
 
 
 
