@@ -172,25 +172,40 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_SurvivalBoxPlot.png?raw=true)
 
-
+1. A Survival Boxplot is generated based on the sample and feature parameters selected with the title indicating the gene set, score method, and feature
+   * The groups are derived based on the Survival Parameters side panel table and setting the time and status cutoff points
+2. A table below displays the sample names being view along with their survival time, survival status, gene set score, and cutoff indicator column
+3. This table can be downloaded for further anaylysis here
 
 ### Survival Heatmap
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_SurvivalHeatMap.png?raw=true)
 
-
+1. The Survival Heatmap is generated with the same Survival Parameters as the Survival Boxplot with the cutoff indication in the annotation at the top of the heatmap
+   * The genes shown in the heatmap are the genes of the gene set selected
+2. An expression matrix based on the genes and samples of the heatmap can be downloaded by the button at the bottom.
+3. The heatmap size can be adjusted with the small triangle at the bottom-right
+   * The row and column font size can also be adjusted in the Figure Parameters side panel tab
 
 ### Feature Box Plot
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_FeatureBoxPlot.png?raw=true)
 
-
+1. A feature may be selected to view amoung the samples that have been already subset by sample type, feature and feature condition
+   * The boxplot title will indicate the gene set, score method, feature, and the additional feature being observed
+2. A table will appear below listing the subset samples, selected additional feature, and the gene set score.
+3. This table can be downloaded for further analysis
 
 ### Feature Heatmap
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_FeatureHeatMap.png?raw=true)
 
-
+1. The Feature Heatmap is similar to the Feature Boxplot described above, where you may select an additional feature to view amoung you previously subset samples
+2. The feature grouping is indicated and annotated at the top of the heatmap
+   * The genes shown in the heatmap are the genes from the selected gene set
+3. An expression matrix based on the genes and samples of the heatmap can be downloaded by the button at the bottom.
+4. The heatmap size can be adjusted with the small triangle at the bottom-right
+   * The row and column font size can also be adjusted in the Figure Parameters side panel tab
 
 # Quesions and Comments
 
