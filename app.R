@@ -206,7 +206,7 @@ ui <-
                                        ),
                                        h3("Quantile Survival Plot Parameter"),
                                        numericInput("QuantPercent","High Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
-                                       h3("Survival Box Plot Parameters"),
+                                       h3("Survival Box Plot & Heatmap Parameters"),
                                        fluidRow(
                                          column(6,
                                                 numericInput("cutoffTime1","High-Risk Survival Time Cutoff:", value = 364, min = 0, step = 1),
