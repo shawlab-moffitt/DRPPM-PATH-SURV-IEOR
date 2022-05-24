@@ -142,13 +142,20 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_FigureParameters.png?raw=true)
 
-
+1. The user may adjust the font and dot size of either of the Survival or Feature Boxplots here
+2. The stat-compare method that appears on the boxplots is available for selection here as well
+   * The selections show "Wilcox.text" and "t.test" for 2 group boxplots and show "Wilcox.text", "t.test", "Kruskal.test" and "anova" for 3+ group boxplots
+4. The user may select a cluster method for clustering the rows of both the Survival and Feature Heatmap
+   * The options are "complete", "ward.D", "ward.D2", "single", "average", "mcquitty", "median", and "centroid"
 
 ### Meta Data
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_MetaData.png?raw=true)
 
-
+1. The user may select columns from the cumulative meta data to view in the UI table.
+   * The table appears standard with the survival time, status, and current feature of interest
+   * Additional columns are added to the selection options, such as the Quartile, Binary, Quantile, and ssGSEA calculations
+2. The meta and expression data are available for download based on the subset critiria from the Sample Parameters
 
 ## Main Panel
 
@@ -156,7 +163,10 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
 
-
+1. The Quartile Survival Plot shows at the top with a descriptive title indicating the feature, gene set, and score method
+2. Each plot on the screen allows for the display of a hazard ratio table by selecting the checkbox
+3. The Binary Survival Plot is displyed second with a title describing the feature, gene set, and score method
+4. The Quantile Survival Plot is displayed third with a title describing the feature, gene set, score method, and user quantile input as indicated in the Survival Parameters side panel tab
 
 ### Survival Box Plot
 
