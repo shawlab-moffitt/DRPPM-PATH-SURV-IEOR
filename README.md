@@ -125,7 +125,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Survival Parameters
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
 
 
 
