@@ -1,8 +1,9 @@
 # DRPPM - SURVIVE Shiny App
 
-[Insert Intro]
+The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. The DRPPM SURVIVE R Shiny App serves to do just that, by utilizing pathway analysis amoung patient expression and cilinical data which has been subset and grouped based on similar features. From a comprehensive list of gene sets cumulated from MSigDB, LINCS L1000 Small-Molecule Perturbations, and Cell Marker gene sets, users may choose a gene set to veiw within their chosen subset of individuals. The data can be viewed through Quartile, Binary, and Quantile Survival Plots, as well as Boxplots and Heatmaps along with a variety of Sample, Survival, and Figure parameter customizations. An example of this app using the Pan ICI Checkpoint Atlas data can be found here: http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/
 
-[Example Pan ICI Checkpoint iAtlas Survival App](http://shawlab.science/shiny/DRPPM_SURVIVE/)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
+
 
 # Installation
 
@@ -10,7 +11,7 @@
 
 1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/DRPPM-SURVIVE
 2. Unzip the downloaded file into the folder of your choice.
-3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
+3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
 4. Set your working directory in R to the local version of the repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
@@ -22,7 +23,7 @@
 ```bash
 git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 ```
-2. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the cloned repository.
+2. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the cloned repository.
 3. Set your working directory in R to the cloned repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
@@ -47,7 +48,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * Must be tab delimited with gene names as symbols located in the first column with subsequent columns consiting of the sample name as the header and expression data down the column.
   *  The App expects lowly expressed genes filtered out and normalized data either to FPKM or TMM.
      * Larger files might inflict memory issues for you local computer.
-  *  An example file can be found via this [link](http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip) due to the size being too large to store in the github repository (157MB zipped).
+  *  An example file can be found via this [link](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) due to the size being too large to store in the github repository (157MB zipped).
 
 * **Meta Data (.tsv/.txt):**
   * This should be a tab delimited file with each row depicting a sample by the same name as in the expression matrix followed by informative columns containing survival data and other features to analyze the samples by.
@@ -117,7 +118,6 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 ### Sample Selection and Parameters
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
-
 
 1. Sample Type selection is an optional parameter that will appear if the user has a SampleType column to subset their data by. 
    * The user can select a single sample type to analyze or select all sample types
