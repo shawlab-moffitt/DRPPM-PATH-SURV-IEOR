@@ -1,9 +1,10 @@
 # DRPPM - SURVIVE Shiny App
 
+# Introduction
+
 The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. The DRPPM SURVIVE R Shiny App serves to do just that, by utilizing pathway analysis amoung patient expression and cilinical data which has been subset and grouped based on similar features. From a comprehensive list of gene sets cumulated from MSigDB, LINCS L1000 Small-Molecule Perturbations, and Cell Marker gene sets, users may choose a gene set to veiw within their chosen subset of individuals. The data can be viewed through Quartile, Binary, and Quantile Survival Plots, as well as Boxplots and Heatmaps along with a variety of Sample, Survival, and Figure parameter customizations. An example of this app using the Pan ICI Checkpoint Atlas data can be found here: http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
-
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/DRPPM_SURVIVE_FlowChart.png?raw=true)
 
 # Installation
 
