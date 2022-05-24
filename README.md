@@ -116,7 +116,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Sample Selection and Parameters
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
 
 
 1. Sample Type selection is an optional parameter that will appear if the user has a SampleType column to subset their data by. 
@@ -125,19 +125,19 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Survival Parameters
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
 
 
 
 ### Figure Parameters
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_FigureParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_FigureParameters.png?raw=true)
 
 
 
 ### Meta Data
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_MetaData.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/SideBar_MetaData.png?raw=true)
 
 
 
@@ -145,31 +145,31 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Survival Plot
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
+![alt text]https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
 
 
 
 ### Survival Box Plot
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalBoxPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalBoxPlot.png?raw=true)
 
 
 
 ### Survival Heatmap
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalHeatMap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_SurvivalHeatMap.png?raw=true)
 
 
 
 ### Feature Box Plot
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_FeatureBoxPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_FeatureBoxPlot.png?raw=true)
 
 
 
 ### Feature Heatmap
 
-![alt text](https://https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_FeatureHeatMap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/tree/main/App_Demo_Pictures/MainPanel_FeatureHeatMap.png?raw=true)
 
 
 
