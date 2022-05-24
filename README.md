@@ -25,7 +25,7 @@
   * Must be tab delimited with gene names as symbols located in the first column with subsequent columns consiting of the sample name as the header and expression data down the column.
   *  The App expects lowly expressed genes filtered out and normalized data either to FPKM or TMM.
      * Larger files might inflict memory issues for you local computer.
-  *  An example file can be found here: [Insert Link to file]
+  *  An example file can be found via this [link](http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip) due to the size being too large to store in the github repository (157MB zipped).
 * **Meta Data (.tsv/.txt):**
   * This should be a tab delimited file with each row depicting a sample by the same name as in the expression matrix followed by informative columns containing survival data and other features to analyze the samples by.
   * Required columns:
