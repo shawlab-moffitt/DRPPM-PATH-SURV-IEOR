@@ -35,7 +35,7 @@
   * Optional Column
     * A sample type column that allows for an initial subsetting of samples followed by grouping by feature (ex. Tissue or Disease Type)
     * Description column(s) that give additional information on the samples
-  * An example file can be found here: [Pan_ICI_iAtlas_MetaData.txt](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/Pan_ICI_ExampleData/Pan_ICI_iAtlas_MetaData.txt)
+  * An example file can be found here: [Pan_ICI_iAtlas_MetaData.txt](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData.txt)
 * **Meta Data Parameters (.tsv/.txt):**
   * This should be a two-column tab-delimited file with the first column containing the column names of the meta file and the second column containing the column type of that meta column
   * The first column containing the users meta column names can be named however the user chooses, the **second column must have names matching the format provided below**.
@@ -47,7 +47,7 @@
     * **SurvivalID:** Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
     * **Feature:** Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
     * **Description:** Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
-  * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/Pan_ICI_ExampleData/Pan_ICI_iAtlas_MetaData_Params.txt)
+  * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt)
 
 |  |  |
 | --- | --- |
@@ -70,10 +70,10 @@
   * The RData list provided ([GeneSet_List_HS.RData](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/GeneSet_Data/GeneSet_List_HS.RData)) contains over 94K gene sets from MSigDB, LINCS L1000 Cell Perturbations, and Cell Marker databases.
  
 * **Gene Set Master Table (Optional):**
-  * This is a optional three-column tab-delimited table the catagorizes and subcatagorizes the gene sets of the provided [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/GeneSet_Data/GeneSet_List_HS.RData)
+  * This is a optional three-column tab-delimited table the catagorizes and subcatagorizes the gene sets of the provided [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_List_HS.RData)
   * It allows for organization of the large gene set list in the UI of the gene set selection for the Shiny App.
   * If not provided or using a user-provided gene set file, the gene set selection table only contains the gene set names.
-  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/GeneSet_Data/GeneSet_CatTable.tsv)
+  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_CatTable.tsv)
 
 # App Set-Up
 
