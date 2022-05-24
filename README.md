@@ -2,6 +2,8 @@
 
 [Insert Intro]
 
+[Example Pan ICI Checkpoint iAtlas Survival App](http://shawlab.science/shiny/DRPPM_SURVIVE/)
+
 # Installation
 
 ## Via Download
@@ -96,9 +98,17 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * It allows for organization of the large gene set list in the UI of the gene set selection for the Shiny App.
   * If not provided or using a user-provided gene set file, the gene set selection table only contains the gene set names.
   * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_CatTable.tsv)
+      * The relative path to this file, within the app.R script (line 105), is through the GeneSet_Data folder. Please keep this in mind if using the master table and moving it around locally.
 
 # App Set-Up
 
+* When using the DRPPM_SURVIVE App with the Pan ICI Checkpoint example data, you may follow the [Installation Section](https://github.com/shawlab-moffitt/DRPPM-SURVIVE#installation) of the README and may press the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file.
+* When using your own files, please ensure all the required files above are provided.
+  * The user must provide an expression matrix, meta data, and mata date parameter file.
+  * The user may use the comprehensive [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_List_HS.RData) or they may provide their own file of gene sets according to the format described in the [Required Files Section](https://github.com/shawlab-moffitt/DRPPM-SURVIVE#required-files)
+    * If using the provided GeneSet List, it is recommended to also have the [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_CatTable.tsv) in the GeneSet_Data folder.
+* The desired project name and the path to the user input files should be entered in their respective fields on lines 23-31 of the app.R script
+* When these files are entered the user may run the App by pressing the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file
 
 # App Features
 
