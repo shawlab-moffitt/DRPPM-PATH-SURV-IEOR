@@ -4,6 +4,18 @@
 
 # Installation
 
+## Via Download
+
+## Via Git Clone
+
+1. Clone the [GitHub Repository](https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git) into the destination of your choice.
+   * Can be done in R Studio Terminal or a terminal of your choice
+```bash
+git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
+```
+2. Set your working directory in R to the cloned repository
+   * This can be done through the "More" settings in the bottom-right box in R Stuido
+   * You may also use the `setwd()` function in R Console.
 
 # Requirments
 
