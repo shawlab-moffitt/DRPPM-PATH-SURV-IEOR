@@ -117,6 +117,10 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 ### Sample Selection and Parameters
 
 
+1. Sample Type selection is an optional parameter that will appear if the user has a SampleType column to subset their data by. 
+   * The user can select a single sample type to analyze or select all sample types
+2 & 3. Feature and Feature condition selection are  
+
 ### Survival Parameters
 
 
