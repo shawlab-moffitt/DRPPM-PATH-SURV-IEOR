@@ -6,6 +6,13 @@
 
 ## Via Download
 
+1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/DRPPM-SURVIVE
+2. Unzip the downloaded file into the folder of your choice.
+3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
+4. Set your working directory in R to the local version of the repository
+   * This can be done through the "More" settings in the bottom-right box in R Stuido
+   * You may also use the `setwd()` function in R Console.
+
 ## Via Git Clone
 
 1. Clone the [GitHub Repository](https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git) into the destination of your choice.
@@ -13,10 +20,10 @@
 ```bash
 git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 ```
-2. Set your working directory in R to the cloned repository
+2. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the cloned repository.
+3. Set your working directory in R to the cloned repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
-3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the cloned repository.
 
 # Requirments
 
