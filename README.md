@@ -1,4 +1,4 @@
-# Survival Analysis Shiny App
+# DRPPM - SURVIVE Shiny App
 
 [Insert Intro]
 
