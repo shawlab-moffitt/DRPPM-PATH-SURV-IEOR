@@ -122,11 +122,13 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 1. Sample Type selection is an optional parameter that will appear if the user has a SampleType column to subset their data by. 
    * The user can select a single sample type to analyze or select all sample types
-2 & 3. Feature and Feature condition selection are related where the Feature Condition options are updated based on the unique values of the Feature chosen.
-   * The user has the option to select all features, this eliminates the Feature Condition selection option
-4. The user has a scoring method option based on the `gsva()` function perfomed
+2. Feature selection allows the user to observe a specified feature from the feature columns annoated in the meta data parameter file.
+   * The user has the option to select all features
+4. Feature condition selection is related to Feature selection, where the Feature Condition options are updated based on the unique values of the Feature chosen.
+   * If user selects all features, this eliminates the Feature Condition selection option
+5. The user has a scoring method option based on the `gsva()` function perfomed
    * ssGSEA, GSVA, plage, or zscore
-5. The gene set of interest is selected through the selection table.
+6. The gene set of interest is selected through the selection table.
    * The user may select a specific gene of interest or upload their own gene set file
 
 ### Survival Parameters
