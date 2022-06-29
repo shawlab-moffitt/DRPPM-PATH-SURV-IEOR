@@ -1,4 +1,4 @@
-# DRPPM - SURVIVE Shiny App
+# DRPPM - PATH SURVIEOR Shiny App
 
 # Introduction
 
