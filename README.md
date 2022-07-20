@@ -37,12 +37,11 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 # R Dependencies
 
 |  |  |  |  |  |
-| --- | --- | --- | --- | --- |
-| shiny_1.7.1 | shinythemes_1.2.0 | shinyjqui_0.4.1 | shinycssloaders_1.0.0 |
-| dplyr_1.0.9 | tidyr_1.1.3 | readr_2.1.2 | tibble_3.1.7 |
-| ggplot2_3.3.6 | survival_3.2-11 | survminer_0.4.9 | pheatmap_1.0.12 |
-| GSVA_1.40.1 | clusterProfiler_4.0.5 | ggpubr_0.4.0 | RColorBrewer_1.1-3 |
-| gtsummary_1.6.0 | DT_0.23 | gridExtra_2.3 | viridis_0.6.2 |  |
+| --- | --- | --- | --- | --- | --- |
+| shiny_1.7.1 | shinythemes_1.2.0 | shinyjqui_0.4.1 | shinycssloaders_1.0.0 | dplyr_1.0.9 | tidyr_1.1.3 |
+| readr_2.1.2 | tibble_3.1.7 | ggplot2_3.3.6 | survival_3.2-11 | survminer_0.4.9 | pheatmap_1.0.12 |
+| GSVA_1.40.1 | clusterProfiler_4.0.5 | ggpubr_0.4.0 | RColorBrewer_1.1-3 | gtsummary_1.6.0 | DT_0.23 |
+| gridExtra_2.3 | viridis_0.6.2 | plotly_4.10.0 |  |  |  |
 
 # Required Files
 
