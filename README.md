@@ -36,7 +36,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 # R Dependencies
 
-|  |  |  |  |  |
+|  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- |
 | shiny_1.7.1 | shinythemes_1.2.0 | shinyjqui_0.4.1 | shinycssloaders_1.0.0 | dplyr_1.0.9 | tidyr_1.1.3 |
 | readr_2.1.2 | tibble_3.1.7 | ggplot2_3.3.6 | survival_3.2-11 | survminer_0.4.9 | pheatmap_1.0.12 |
