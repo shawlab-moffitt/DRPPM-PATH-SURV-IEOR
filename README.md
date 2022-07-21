@@ -124,12 +124,13 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
    * The user can select a single sample type to analyze or select all sample types
 2. Feature selection allows the user to observe a specified feature from the feature columns annoated in the meta data parameter file.
    * The user has the option to select all features
-4. Feature condition selection is related to Feature selection, where the Feature Condition options are updated based on the unique values of the Feature chosen.
+3. Feature condition selection is related to Feature selection, where the Feature Condition options are updated based on the unique values of the Feature chosen.
    * If user selects all features, this eliminates the Feature Condition selection option
-5. The user has a scoring method option based on the `gsva()` function perfomed
+4. The user has a scoring method option based on the `gsva()` function perfomed
    * ssGSEA, GSVA, plage, or zscore
-6. The gene set of interest is selected through the selection table.
+5. The gene set of interest is selected through the selection table.
    * The user may select a specific gene of interest or upload their own gene set file
+6. The genes within the gene set that is chosen can be viewed by checking the box
 
 ### Survival Parameters
 
@@ -138,31 +139,24 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 1. The user may select to view a specific type of survival analysis based on the available survival types in the meta data provided. 
    * For exmaple, OS, EFS, or PFS amoung others
 2. One of the survival plots shown is a Quantile Survival Plot, this numeric input allows the user to choose their top and bottom quantile cutoff
-3. The user may also specify the survival time and status cutoff when viewing the Survival Box Plot and Heatmap
+3. The user may also specify the survival time and status cutoff when viewing the Risk Stratification Box Plot and Heatmap
    * The time is in days and the status signifies 0 for 'no-event' and 1 for an 'event'
 
 ### Figure Parameters
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_FigureParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_FigureParamaters.png?raw=true)
 
-1. The user may adjust the font and dot size of either of the Survival or Feature Boxplots here
-2. The stat-compare method that appears on the boxplots is available for selection here as well
+1. The limit on years for the survival plots may be adjusted
+2. The user may adjust the font and dot size, as well as the text orientation and stat comparison method for the boxplots within the app
    * The selections show "Wilcox.text" and "t.test" for 2 group boxplots and show "Wilcox.text", "t.test", "Kruskal.test" and "anova" for 3+ group boxplots
-4. The user may select a cluster method for clustering the rows of both the Survival and Feature Heatmap
-   * The options are "complete", "ward.D", "ward.D2", "single", "average", "mcquitty", "median", and "centroid"
-
-### Meta Data
-
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_MetaData.png?raw=true)
-
-1. The user may select columns from the cumulative meta data to view in the UI table.
-   * The table appears standard with the survival time, status, and current feature of interest
-   * Additional columns are added to the selection options, such as the Quartile, Binary, Quantile, and ssGSEA calculations
-2. The meta and expression data are available for download based on the subset critiria from the Sample Parameters
+3. Heatmap clustering methods for the rows, font sizes, and color palettes
+   * The Cluster options are "complete", "ward.D", "ward.D2", "single", "average", "mcquitty", "median", and "centroid"
+4. The font size for the forest plots my be adjusted
+5. The font size for the linearity plots may be adjusted
 
 ## Main Panel
 
-### Survival Plot
+### Survival Analysis of Pathway Activity
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
 
@@ -171,20 +165,77 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 3. The Binary Survival Plot is displyed second with a title describing the feature, gene set, and score method
 4. The Quantile Survival Plot is displayed third with a title describing the feature, gene set, score method, and user quantile input as indicated in the Survival Parameters side panel tab
 
-### Survival Box Plot
+### Univariate Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_SurvivalBoxPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Univar_Survival.png?raw=true)
 
-1. A Survival Boxplot is generated based on the sample and feature parameters selected with the title indicating the gene set, score method, and feature
-   * The groups are derived based on the Survival Parameters side panel table and setting the time and status cutoff points
-2. A table below displays the sample names being view along with their survival time, survival status, gene set score, and cutoff indicator column
-3. This table can be downloaded for further anaylysis here
+1. The user may view survival outcome based on a selected feature from the meta data
+2. If the feature chosen is continuous, please check the box so the proper Cox Proportional Hazard analysis is performed
+3. The reference feature for the Coxh analysis can be specified
+4. The survival plot is show below, along with options to view the Coxh table, a forest plot, and a linearity check for continuous variables
 
-### Survival Heatmap
+### Bivariate Additive Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_SurvivalHeatMap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_BivarAdd_Survival.png?raw=true)
 
-1. The Survival Heatmap is generated with the same Survival Parameters as the Survival Boxplot with the cutoff indication in the annotation at the top of the heatmap
+1. Two features may be selected to view an additive Coxh survival analyis
+2. If either feature is continuous the box should be checked
+3. A reference variable for both features my be selected as well
+4. The Cox Hazard Ratio table and summary is viewable, along with the Forest plot and a linearity check for continuous variables
+5. An model comparison between the two features is performed through ANOVA
+
+### Bivariate Interaction Survival Analysis
+
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Bivar_Inter_Survival.png?raw=true)
+
+1. Two features may be selected to view an additive Coxh survival analyis
+2. If either feature is continuous the box should be checked
+3. A reference variable for both features my be selected as well
+4. The survival plot displaying the interaction of the two features is shown, along with the Cox HR table, forest plot, and a linearity plot
+
+### Multivariate Survival Analysis
+
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Multivar_Survival.png?raw=true)
+
+1. The user may select multiple features to perform a Cox Proportion Hazard regression analysis on
+   * If too many features are added the model may become convoluted
+2. The Coxh tables and summaries are shown, along with options to view the forest and linearity plot
+3. The Continous Coxh table is currently shown along side in case there is a mix of categorical and continuous features
+
+### Meta Data Exploration
+
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_MetaTable.png?raw=true)
+
+1. The user may select columns from the cumulative meta data to view in the UI table.
+   * The table appears standard with the survival time, status, and current feature of interest
+   * Additional columns are added to the selection options, such as the Quartile, Binary, Quantile, and ssGSEA calculations
+2. The meta and expression data are available for download based on the subset critiria from the Sample Parameters
+
+### ssGSEA Score Density
+
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_ssGSEA_Density.png?raw=true)
+
+1. The user may define a percentile to view as a red vertical line on the ssGSEA score density plot
+   * The plot originates with three blue dashed lines representing the 25, 50, and 75 percentile. This can be turned off through the check box below
+2. The plot can be downloaded as an svg or pdf
+3. The table below will show the samples along with their ssGSEA score for the gene set selected
+4. This table may be downloaded
+
+### Risk Stratification Box Plot
+
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_BoxPlot.png?raw=true)
+
+1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
+2. A Survival Boxplot is generated based on the sample and feature parameters selected with the title indicating the gene set, score method, and feature
+3. A table below displays the sample names being view along with their survival time, survival status, gene set score, and cutoff indicator column
+4. This table can be downloaded for further anaylysis here
+
+### Risk Stratification Heatmap
+
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_Heatmap.png?raw=true)
+
+1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
+   * The Survival Heatmap is generated with the same Survival Parameters as the Survival Boxplot with the cutoff indication in the annotation at the top of the heatmap
    * The genes shown in the heatmap are the genes of the gene set selected
 2. An expression matrix based on the genes and samples of the heatmap can be downloaded by the button at the bottom.
 3. The heatmap size can be adjusted with the small triangle at the bottom-right
@@ -192,7 +243,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Feature Box Plot
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_FeatureBoxPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Feature_Boxplot.png?raw=true)
 
 1. A feature may be selected to view amoung the samples that have been already subset by sample type, feature and feature condition
    * The boxplot title will indicate the gene set, score method, feature, and the additional feature being observed
@@ -201,7 +252,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Feature Heatmap
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_FeatureHeatMap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Feature_Heatmap.png?raw=true)
 
 1. The Feature Heatmap is similar to the Feature Boxplot described above, where you may select an additional feature to view amoung you previously subset samples
 2. The feature grouping is indicated and annotated at the top of the heatmap
