@@ -114,6 +114,27 @@ if (exists("GeneSetTable_File") == FALSE) {
   
 }
 
+## Pre-Selected Inputs
+# An option from the meta, All, or NULL
+PreSelect_SamplyType <- NULL
+PreSelec_Feature <- NULL
+# An option from the meta or NULL
+PreSelec_SubFeature <- NULL
+PreSelec_SecondaryFeature <- NULL
+
+## Pre-Selected Inputs
+# An option from the meta, All, or NULL
+if (is.null(PreSelect_SamplyType) == FALSE) {
+  if (grepl("all",PreSelect_SamplyType, ignore.case = T) == TRUE) {
+    PreSelect_SamplyType <- "All_Sample_Types"
+  }
+}
+if (is.null(PreSelec_Feature) == FALSE) {
+  if (grepl("all",PreSelec_Feature, ignore.case = T) == TRUE) {
+    PreSelec_Feature <- "All_Features"
+  }
+}
+
 
 ####----Functions----####
 
@@ -140,6 +161,13 @@ quantile_conversion = function(mat,cutoff) {
   new_mat[mat >= quantile(mat,1-cutoff)] = "High_AboveCutoff";
   new_mat[mat <= quantile(mat,cutoff)] = "Low_BelowCutoff";
   new_mat[mat > quantile(mat,cutoff) & mat < quantile(mat,1-cutoff)] = "BetweenCutoff";
+  return (new_mat)
+}
+
+quantile_conversion2 = function(mat,cutoff) {
+  new_mat = mat;
+  new_mat[mat > quantile(mat,cutoff)] = "High_AboveCutoff";
+  new_mat[mat <= quantile(mat,cutoff)] = "Low_BelowCutoff";
   return (new_mat)
 }
 
@@ -175,6 +203,9 @@ ui <-
                                                   value = 1
                                          ),
                                          tabPanel("Single Genes",
+                                                  radioButtons("RawOrSS","Survival Analysis By:",
+                                                               choices = c("Raw Gene Expression","ssGSEA Rank Normalized"),
+                                                               selected = "Raw Gene Expression", inline = T),
                                                   uiOutput("rendGeneGeneSetTable"),
                                                   value = 2
                                          ),
@@ -199,8 +230,9 @@ ui <-
                                        column(6,
                                               uiOutput("rendSurvivalType_id")
                                        ),
-                                       h3("Quantile Cutoff Survival Plot Parameter"),
+                                       h3("User Cutoff Survival Plot Parameters"),
                                        numericInput("QuantPercent","High/Low Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
+                                       numericInput("QuantPercent2","Above/Below Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                        h3("Risk Stratification Plot Parameters"),
                                        fluidRow(
                                          column(6,
@@ -285,6 +317,10 @@ ui <-
                                        p(),
                                        withSpinner(jqui_resizable(plotOutput("Splot", width = "100%", height = "500px")), type = 6),
                                        fluidRow(
+                                         downloadButton("dnldSplot_SVG","Download as SVG"),
+                                         downloadButton("dnldSplot_PDF","Download as PDF")
+                                       ),
+                                       fluidRow(
                                          column(3,
                                                 offset = 1,
                                                 checkboxInput("ShowQaurtHR","Display Quartile Hazard Ratio Table")),
@@ -297,6 +333,10 @@ ui <-
                                          hr()
                                        ),
                                        withSpinner(jqui_resizable(plotOutput("SplotBIN", width = "100%", height = "500px")), type = 6),
+                                       fluidRow(
+                                         downloadButton("dnldSplotBIN_SVG","Download as SVG"),
+                                         downloadButton("dnldSplotBIN_PDF","Download as PDF")
+                                       ),
                                        fluidRow(
                                          column(3,
                                                 offset = 1,
@@ -311,11 +351,32 @@ ui <-
                                        ),
                                        withSpinner(jqui_resizable(plotOutput("SquantPlot", width = "100%", height = "500px")), type = 6),
                                        fluidRow(
+                                         downloadButton("dnldSquantPlot_SVG","Download as SVG"),
+                                         downloadButton("dnldSquantPlot_PDF","Download as PDF")
+                                       ),
+                                       fluidRow(
                                          column(3,
                                                 offset = 1,
                                                 checkboxInput("ShowQuantHR","Display Quantile Hazard Ratio Table")),
                                          column(4,
                                                 uiOutput("rendQuantHRtab"))
+                                       ),
+                                       fluidRow(
+                                         tags$head(
+                                           tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
+                                         hr()
+                                       ),
+                                       withSpinner(jqui_resizable(plotOutput("SquantPlot2", width = "100%", height = "500px")), type = 6),
+                                       fluidRow(
+                                         downloadButton("dnldSquantPlot2_SVG","Download as SVG"),
+                                         downloadButton("dnldSquantPlot2_PDF","Download as PDF")
+                                       ),
+                                       fluidRow(
+                                         column(3,
+                                                offset = 1,
+                                                checkboxInput("ShowQuantHR2","Display Quantile Hazard Ratio Table")),
+                                         column(4,
+                                                uiOutput("rendQuantHRtab2"))
                                        ),
                                        fluidRow(
                                          tags$head(
@@ -329,19 +390,21 @@ ui <-
                               tabPanel("Univariate Survival Analysis",
                                        p(),
                                        fluidRow(
-                                         column(4,
+                                         column(3,
                                                 uiOutput("rendSurvivalFeatureSingle"),
+                                                fluidRow(
+                                                  column(6,
+                                                         checkboxInput("UniVarContCheck","Continuous Feature",value = F)
+                                                         ),
+                                                  column(6,
+                                                         checkboxInput("UniVarNAcheck","Remove NA/Unknown",value = T)
+                                                         )
+                                                ),
                                                 uiOutput("rendSurvFeatVariableUni")
                                          ),
-                                         #column(1,
-                                         #       checkboxInput("UniVarContCheck","Continuous Feature",value = F)
-                                         #)
-                                         column(4,
-                                                verbatimTextOutput("UnivarSummary")
-                                         ),
-                                         column(4,
-                                                verbatimTextOutput("UnivarSummaryCont")
-                                         )
+                                         column(8,
+                                                verbatimTextOutput("UnivarSummExpl")
+                                                )
                                        ),
                                        tabsetPanel(
                                          id = "UniVarPlots",
@@ -350,21 +413,23 @@ ui <-
                                          
                                          tabPanel("Survival Plot",
                                                   p(),
-                                                  withSpinner(jqui_resizable(plotOutput("featSplot", width = "100%", height = "500px")), type = 6)
+                                                  withSpinner(jqui_resizable(plotOutput("featSplot", width = "100%", height = "500px")), type = 6),
+                                                  fluidRow(
+                                                    downloadButton("dnldfeatSplot_SVG","Download as SVG"),
+                                                    downloadButton("dnldfeatSplot_PDF","Download as PDF")
+                                                  )
                                          ),
                                          
                                          ##--Coxh Tables--##
                                          
-                                         tabPanel("Coxh Tables",
+                                         tabPanel("Coxh Table",
                                                   p(),
                                                   fluidRow(
                                                     column(6,
-                                                           h4("Coxh Hazard Ratio (Categorical)"),
                                                            div(withSpinner(tableOutput("SSingleFeatureHRtab"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                     ),
                                                     column(6,
-                                                           h4("Coxh Hazard Ratio (Continuous)"),
-                                                           div(withSpinner(tableOutput("SSingleFeatureHRtabCont"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
+                                                           verbatimTextOutput("UnivarSummary")
                                                     )
                                                   )
                                          ),
@@ -408,39 +473,42 @@ ui <-
                                                   p(),
                                                   fluidRow(
                                                     column(3,
-                                                           uiOutput("rendSurvivalFeatureBi1")
-                                                    ),
-                                                    column(3,
-                                                           uiOutput("rendSurvivalFeatureBi2")
-                                                    )
-                                                    #column(6,
-                                                    #       verbatimTextOutput("bivarSummary")
-                                                    #)
-                                                  ),
-                                                  fluidRow(
-                                                    column(3,
+                                                           uiOutput("rendSurvivalFeatureBi1"),
+                                                           fluidRow(
+                                                             column(6,
+                                                                    checkboxInput("BiVarAddContCheck1","Continuous Feature",value = F)
+                                                             ),
+                                                             column(6,
+                                                                    checkboxInput("BiVarAddNAcheck1","Remove NA/Unknown",value = T)
+                                                             )
+                                                           ),
                                                            uiOutput("rendSurvFeatVariableBi1")
-                                                    ),
+                                                           ),
                                                     column(3,
+                                                           uiOutput("rendSurvivalFeatureBi2"),
+                                                           fluidRow(
+                                                             column(6,
+                                                                    checkboxInput("BiVarAddContCheck2","Continuous Feature",value = F)
+                                                                    ),
+                                                             column(6,
+                                                                    checkboxInput("BiVarAddNAcheck2","Remove NA/Unknown",value = T)
+                                                                    )
+                                                             ),
                                                            uiOutput("rendSurvFeatVariableBi2")
-                                                    )
-                                                    #column(3,
-                                                    #       verbatimTextOutput("bivarAnova1")
-                                                    #),
-                                                    #column(3,
-                                                    #       verbatimTextOutput("bivarAnova2")
-                                                    #)
+                                                           ),
+                                                    column(6,
+                                                           verbatimTextOutput("BivarAddSummExpl")
+                                                           )
                                                   ),
                                                   tabsetPanel(
                                                     id = "BiVarPlots",
                                                     
                                                     ##--Coxh Tables--##
                                                     
-                                                    tabPanel("Cox HR Table (Categorical)",
+                                                    tabPanel("Cox HR Table",
                                                              p(),
                                                              fluidRow(
                                                                column(6,
-                                                                      h4("Coxh Hazard Ratio (Categorical)"),
                                                                       div(withSpinner(tableOutput("BiFeatureHRtab"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                                ),
                                                                column(6,
@@ -451,27 +519,6 @@ ui <-
                                                                         ),
                                                                         column(6,
                                                                                verbatimTextOutput("bivarAnova2")
-                                                                        )
-                                                                      )
-                                                               )
-                                                             )
-                                                    ),
-                                                    
-                                                    tabPanel("Cox HR Table (Continuous)",
-                                                             p(),
-                                                             fluidRow(
-                                                               column(6,
-                                                                      h4("Coxh Hazard Ratio (Continuous)"),
-                                                                      div(withSpinner(tableOutput("BiFeatureHRtabCont"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
-                                                               ),
-                                                               column(6,
-                                                                      verbatimTextOutput("bivarSummaryCont"),
-                                                                      fluidRow(
-                                                                        column(6,
-                                                                               verbatimTextOutput("bivarAnova1Cont")
-                                                                        ),
-                                                                        column(6,
-                                                                               verbatimTextOutput("bivarAnova2Cont")
                                                                         )
                                                                       )
                                                                )
@@ -511,27 +558,31 @@ ui <-
                                                   p(),
                                                   fluidRow(
                                                     column(3,
-                                                           uiOutput("rendSurvivalFeatureBi1Inter")
-                                                    ),
-                                                    column(3,
-                                                           uiOutput("rendSurvivalFeatureBi2Inter")
-                                                    ),
-                                                    column(6,
-                                                           verbatimTextOutput("bivarSummaryInter")
-                                                    )
-                                                  ),
-                                                  fluidRow(
-                                                    column(3,
+                                                           uiOutput("rendSurvivalFeatureBi1Inter"),
+                                                           fluidRow(
+                                                             column(6,
+                                                                    checkboxInput("BiVarIntContCheck1","Continuous Feature",value = F)
+                                                                    ),
+                                                             column(6,
+                                                                    checkboxInput("BiVarIntNAcheck1","Remove NA/Unknown",value = T)
+                                                                    )
+                                                             ),
                                                            uiOutput("rendSurvFeatVariableBi1Inter")
                                                     ),
                                                     column(3,
+                                                           uiOutput("rendSurvivalFeatureBi2Inter"),
+                                                           fluidRow(
+                                                             column(6,
+                                                                    checkboxInput("BiVarIntContCheck2","Continuous Feature",value = F)
+                                                             ),
+                                                             column(6,
+                                                                    checkboxInput("BiVarIntNAcheck2","Remove NA/Unknown",value = T)
+                                                             )
+                                                           ),
                                                            uiOutput("rendSurvFeatVariableBi2Inter")
                                                     ),
-                                                    column(3,
-                                                           verbatimTextOutput("bivarAnovaInter1")
-                                                    ),
-                                                    column(3,
-                                                           verbatimTextOutput("bivarAnovaInter2")
+                                                    column(6,
+                                                           verbatimTextOutput("BivarIntSummExpl")
                                                     )
                                                   ),
                                                   tabsetPanel(
@@ -541,28 +592,25 @@ ui <-
                                                     
                                                     tabPanel("Survival Plot",
                                                              p(),
-                                                             withSpinner(jqui_resizable(plotOutput("featSplotBi", width = "100%", height = "500px")), type = 6)
+                                                             withSpinner(jqui_resizable(plotOutput("featSplotBi", width = "100%", height = "500px")), type = 6),
+                                                             fluidRow(
+                                                               downloadButton("dnldfeatSplotBi_SVG","Download as SVG"),
+                                                               downloadButton("dnldfeatSplotBi_PDF","Download as PDF")
+                                                             )
                                                     ),
                                                     
                                                     ##--Coxh Tables--##
                                                     
-                                                    tabPanel("Cox HR Table (Categorical)",
+                                                    tabPanel("Cox HR Table",
                                                              p(),
                                                              fluidRow(
                                                                column(6,
-                                                                      h4("Coxh Hazard Ratio (Categorical)"),
                                                                       div(withSpinner(tableOutput("BiFeatureHRtabInter"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
-                                                               )
-                                                             )
-                                                    ),
-                                                    
-                                                    tabPanel("Cox HR Table (Continuous)",
-                                                             p(),
-                                                             fluidRow(
+                                                               ),
                                                                column(6,
-                                                                      h4("Coxh Hazard Ratio (Continuous)"),
-                                                                      div(withSpinner(tableOutput("BiFeatureHRtabContInter"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
-                                                               )
+                                                                      verbatimTextOutput("bivarSummaryInter"),
+                                                                      verbatimTextOutput("bivarAnovaInter1")
+                                                                      )
                                                              )
                                                     ),
                                                     
@@ -599,13 +647,8 @@ ui <-
                                                   p(),
                                                   fluidRow(
                                                     column(4,
-                                                           uiOutput("rendSurvivalFeature")
-                                                    ),
-                                                    column(4,
-                                                           verbatimTextOutput("multivarSummary")
-                                                    ),
-                                                    column(4,
-                                                           verbatimTextOutput("multivarSummaryCont")
+                                                           uiOutput("rendSurvivalFeature"),
+                                                           checkboxInput("MultiVarNAcheck","Remove NA/Unknown",value = T)
                                                     )
                                                   ),
                                                   tabsetPanel(
@@ -617,10 +660,12 @@ ui <-
                                                              fluidRow(
                                                                column(6,
                                                                       h4("Coxh Hazard Ratio (Categorical)"),
+                                                                      verbatimTextOutput("multivarSummary"),
                                                                       div(withSpinner(tableOutput("SFeatureHRtab"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                                ),
                                                                column(6,
                                                                       h4("Coxh Hazard Ratio (Continuous)"),
+                                                                      verbatimTextOutput("multivarSummaryCont"),
                                                                       div(withSpinner(tableOutput("SFeatureHRtabCont"), type = 7, size = 0.5), style = "font-size:12px; width:500px; overflow-X: scroll")
                                                                )
                                                              )
@@ -655,6 +700,20 @@ ui <-
                                                     )
                                                   ),
                                                   value = 5),
+                                         tabPanel("Score Density",
+                                                  p(),
+                                                  fluidRow(
+                                                    numericInput("densityPercent","User Defined Percentile (Red)",value = 15, width = "200px"),
+                                                    checkboxInput("QuartileLinesCheck","Show Quartile Lines (Blue)",value = T)
+                                                  ),
+                                                  withSpinner(jqui_resizable(plotOutput("ssgseaDensity", width = "100%", height = "500px")), type = 6),
+                                                  fluidRow(
+                                                    downloadButton("dnldssgseaDensity_SVG","Download as SVG"),
+                                                    downloadButton("dnldssgseaDensity_PDF","Download as PDF")
+                                                  ),
+                                                  div(DT::dataTableOutput("ssgseaDensityTable"), style = "font-size:12px"),
+                                                  downloadButton("dnldssgseaDensityTable","Download Table"),
+                                                  value = 6),
                                          tabPanel("Risk Straification Boxplot",
                                                   p(),
                                                   withSpinner(jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "500px")), type = 6),
@@ -699,47 +758,6 @@ server <- function(input, output, session) {
   
   ####----Render UI----####
   
-  output$rendSurvXaxis <- renderUI({
-    
-    meta_ssgsea <- ssGSEAmeta()
-    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-      surv_time_col <- metacol_survtime[1]
-      surv_id_col <- metacol_survid[1]
-    }
-    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-      surv_time_col <- input$SurvivalType_time
-      surv_id_col <- input$SurvivalType_id
-    }
-    max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
-    numericInput("SurvXaxis","X-Axis Limit (years)", value = max_time)
-    
-    
-  })
-  
-  ## Select survival type selection based on meta columns (ex. OS vs EFS)
-  output$rendSurvivalType_time <- renderUI({
-    
-    ## Only show if more than one option
-    if (length(metacol_survtime > 1)) {
-      
-      selectInput("SurvivalType_time","Select Survival Time Data:", choices = metacol_survtime)
-      
-    }
-    
-  })
-  
-  ## Select survival type selection based on meta columns (ex. OS vs EFS)
-  output$rendSurvivalType_id <- renderUI({
-    
-    ## Only show if more than one option
-    if (length(metacol_survid > 1)) {
-      
-      selectInput("SurvivalType_id","Select Survival ID Data:", choices = metacol_survid)
-      
-    }
-    
-  })
-  
   ## Select sample type to subset samples by - only render if more than one sample type
   output$rendSampleTypeSelection <- renderUI({
     
@@ -748,41 +766,67 @@ server <- function(input, output, session) {
       SampleTypeChoices <- unique(meta[,metacol_sampletype])
       SampleTypeChoices <- c(SampleTypeChoices,"All_Sample_Types")
       selectInput("SampleTypeSelection",paste("Select Sample Type (",metacol_sampletype,"):",sep = ""),
-                  choices = SampleTypeChoices)
+                  choices = SampleTypeChoices, selected = PreSelect_SamplyType)
       
     }
     
   })
   
-  output$rendBoxplotFeature <- renderUI({
+  ## Select primary feature to look at - All not working yet
+  output$rendFeatureSelection <- renderUI({
     
-    if (input$SampleTypeSelection != "All_Sample_Types") {
+    if (length(unique(meta[,metacol_sampletype])) > 1) {
       
-      selectInput("BoxplotFeature","Select Feature:",
-                  choices = metacol_feature)
+      if (input$SampleTypeSelection == "All_Sample_Types") {
+        
+        FeatureChoices <- c(metacol_sampletype,metacol_feature,"All_Features")
+        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
+        
+      }
+      else if (input$SampleTypeSelection != "All_Sample_Types") {
+        
+        FeatureChoices <- c(metacol_feature,"All_Features")
+        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
+        
+      }
       
     }
-    else if (input$SampleTypeSelection == "All_Sample_Types") {
+    else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
-      selectInput("BoxplotFeature","Select Feature:",
-                  choices = c(metacol_sampletype,metacol_feature))
+      FeatureChoices <- c(metacol_feature,"All_Features")
+      selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
       
     }
     
   })
   
-  output$rendHeatmapFeature <- renderUI({
+  ## Select primary features condition to look at - All not working yet
+  output$rendSubFeatureSelection <- renderUI({
     
-    if (input$SampleTypeSelection != "All_Sample_Types") {
-      
-      selectInput("HeatmapFeature","Select Feature:",
-                  choices = metacol_feature)
-      
+    req(input$FeatureSelection)
+    
+    if (length(unique(meta[,metacol_sampletype])) > 1) {
+      SampleType <- input$SampleTypeSelection
     }
-    else if (input$SampleTypeSelection == "All_Sample_Types") {
+    if (length(unique(meta[,metacol_sampletype])) <= 1) {
+      SampleType <- "All_Sample_Types"
+    }
+    #SampleType <- input$SampleTypeSelection
+    Feature <- input$FeatureSelection
+    
+    if (SampleType == "All_Sample_Types") {
+      meta <- meta
+    }
+    if (SampleType != "All_Sample_Types") {
+      meta <- meta[which(meta[,metacol_sampletype] == SampleType),]
+    }
+    
+    if (Feature != "All_Features") {
       
-      selectInput("HeatmapFeature","Select Feature:",
-                  choices = c(metacol_sampletype,metacol_feature))
+      SubFeatureChoices <- unique(meta[,Feature])
+      # Sort options, will put 1,TRUE,yes before 0,FASLE,no, so the 'positive' value is the initial selected - puts NA last
+      SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
+      selectInput("subFeatureSelection","Feature Condition:", choices = SubFeatureChoices, selected = PreSelec_SubFeature)
       
     }
     
@@ -790,6 +834,8 @@ server <- function(input, output, session) {
   
   output$rendSurvivalFeatureSingle <- renderUI({
     
+    geneset <- gs_react()
+    geneset_name <- names(geneset)
     
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
@@ -797,8 +843,9 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "All_Features") {
           metacol_feature <- metacol_feature[-which(metacol_feature == input$FeatureSelection)]
         }
+        metacol_feature <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
-                    choices = metacol_feature)
+                    choices = metacol_feature, selected = PreSelec_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -808,8 +855,9 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "All_Features") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
+        SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
-                    choices = SurvFeatChoices2)
+                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
         
       }
     }
@@ -817,106 +865,10 @@ server <- function(input, output, session) {
       SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature)
       if (input$FeatureSelection != "All_Features") {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
+        SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
       }
       selectInput("SingleSurvivalFeature","Select Feature:",
-                  choices = SurvFeatChoices2)
-    }
-    
-  })
-  
-  output$rendSurvFeatVariableUni <- renderUI({
-    
-    Feature <- input$SingleSurvivalFeature
-    metaSub <- ssGSEAmeta()
-    Var_choices <- unique(metaSub[,Feature])
-    Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
-    selectInput("SurvFeatVariableUni","Select Coxh Feature Reference Variable:",
-                choices = Var_choices)
-    
-    
-  })
-  
-  output$rendSurvFeatVariableBi1 <- renderUI({
-    
-    Feature <- input$SurvivalFeatureBi1
-    metaSub <- ssGSEAmeta()
-    Var_choices <- unique(metaSub[,Feature])
-    Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
-    selectInput("SurvFeatVariableBi1","Select Coxh Feature Reference Variable for Feature 1:",
-                choices = Var_choices)
-    
-    
-  })
-  
-  output$rendSurvFeatVariableBi2 <- renderUI({
-    
-    Feature <- input$SurvivalFeatureBi2
-    metaSub <- ssGSEAmeta()
-    Var_choices <- unique(metaSub[,Feature])
-    Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
-    selectInput("SurvFeatVariableBi2","Select Coxh Feature Reference Variable for Feature 2:",
-                choices = Var_choices)
-    
-    
-  })
-  
-  output$rendSurvFeatVariableBi1Inter <- renderUI({
-    
-    Feature <- input$SurvivalFeatureBi1Inter
-    metaSub <- ssGSEAmeta()
-    Var_choices <- unique(metaSub[,Feature])
-    Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
-    selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference Variable for Feature 1:",
-                choices = Var_choices)
-    
-    
-  })
-  
-  output$rendSurvFeatVariableBi2Inter <- renderUI({
-    
-    Feature <- input$SurvivalFeatureBi2Inter
-    metaSub <- ssGSEAmeta()
-    Var_choices <- unique(metaSub[,Feature])
-    Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
-    selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference Variable for Feature 2:",
-                choices = Var_choices)
-    
-    
-  })
-  
-  output$rendSurvivalFeature <- renderUI({
-    
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
-    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
-    
-    if (length(unique(meta[,metacol_sampletype])) > 1) {
-      if (input$SampleTypeSelection != "All_Sample_Types") {
-        
-        if (input$FeatureSelection != "All_Features") {
-          SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
-        }
-        selectInput("SurvivalFeature","Select Feature(s):",
-                    choices = SurvFeatChoices, multiple = T, selected = "HiLoPScore")
-        
-      }
-      else if (input$SampleTypeSelection == "All_Sample_Types") {
-        
-        if (input$FeatureSelection != "All_Features") {
-          SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
-        }
-        selectInput("SurvivalFeature","Select Feature(s):",
-                    choices = SurvFeatChoices2, multiple = T, selected = "HiLoPScore")
-        
-      }
-    }
-    else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-      if (input$FeatureSelection != "All_Features") {
-        SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
-      }
-      selectInput("SurvivalFeature","Select Feature(s):",
-                  choices = SurvFeatChoices2, multiple = T, selected = "HiLoPScore")
+                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
     }
     
   })
@@ -972,7 +924,7 @@ server <- function(input, output, session) {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                    choices = SurvFeatChoices)
+                    choices = SurvFeatChoices, selected = PreSelec_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -981,7 +933,7 @@ server <- function(input, output, session) {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                    choices = SurvFeatChoices2)
+                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
         
       }
     }
@@ -990,7 +942,7 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
       selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                  choices = SurvFeatChoices2)
+                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
     }
     
   })
@@ -1046,7 +998,7 @@ server <- function(input, output, session) {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                    choices = SurvFeatChoices)
+                    choices = SurvFeatChoices, selected = PreSelec_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -1055,7 +1007,7 @@ server <- function(input, output, session) {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                    choices = SurvFeatChoices2)
+                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
         
       }
     }
@@ -1064,50 +1016,258 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
       selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                  choices = SurvFeatChoices2)
+                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
     }
     
   })
   
-  ## Select primary feature to look at - All not working yet
-  output$rendFeatureSelection <- renderUI({
+  output$rendSurvivalFeature <- renderUI({
     
-    FeatureChoices <- c(metacol_feature,"All_Features")
-    selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices)
-    
-  })
-  
-  ## Select primary features condition to look at - All not working yet
-  output$rendSubFeatureSelection <- renderUI({
-    
-    req(input$FeatureSelection)
+    geneset <- gs_react()
+    geneset_name <- names(geneset)
+    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
+    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
     
     if (length(unique(meta[,metacol_sampletype])) > 1) {
-      SampleType <- input$SampleTypeSelection
+      if (input$SampleTypeSelection != "All_Sample_Types") {
+        
+        if (input$FeatureSelection != "All_Features") {
+          SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
+        }
+        selectInput("SurvivalFeature","Select Feature(s):",
+                    choices = SurvFeatChoices, multiple = T, selected = "HiLoPScore")
+        
+      }
+      else if (input$SampleTypeSelection == "All_Sample_Types") {
+        
+        if (input$FeatureSelection != "All_Features") {
+          SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
+        }
+        selectInput("SurvivalFeature","Select Feature(s):",
+                    choices = SurvFeatChoices2, multiple = T, selected = "HiLoPScore")
+        
+      }
     }
-    if (length(unique(meta[,metacol_sampletype])) <= 1) {
-      SampleType <- "All_Sample_Types"
+    else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+      if (input$FeatureSelection != "All_Features") {
+        SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
+      }
+      selectInput("SurvivalFeature","Select Feature(s):",
+                  choices = SurvFeatChoices2, multiple = T, selected = "HiLoPScore")
     }
-    #SampleType <- input$SampleTypeSelection
-    Feature <- input$FeatureSelection
     
-    if (SampleType == "All_Sample_Types") {
-      meta <- meta
-    }
-    if (SampleType != "All_Sample_Types") {
-      meta <- meta[which(meta[,metacol_sampletype] == SampleType),]
-    }
+  })
+  
+  output$rendSurvXaxis <- renderUI({
     
-    if (Feature != "All_Features") {
+    meta_ssgsea <- ssGSEAmeta()
+    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+      surv_time_col <- metacol_survtime[1]
+      surv_id_col <- metacol_survid[1]
+    }
+    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+      surv_time_col <- input$SurvivalType_time
+      surv_id_col <- input$SurvivalType_id
+    }
+    max_time <- ceiling(max(meta_ssgsea[,surv_time_col])/365.25)
+    numericInput("SurvXaxis","X-Axis Limit (years)", value = max_time)
+    
+    
+  })
+  
+  ## Select survival type selection based on meta columns (ex. OS vs EFS)
+  output$rendSurvivalType_time <- renderUI({
+    
+    ## Only show if more than one option
+    if (length(metacol_survtime > 1)) {
       
-      SubFeatureChoices <- unique(meta[,Feature])
-      # Sort options, will put 1,TRUE,yes before 0,FASLE,no, so the 'positive' value is the initial selected - puts NA last
-      SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
-      selectInput("subFeatureSelection","Feature Condition:", choices = SubFeatureChoices)
+      selectInput("SurvivalType_time","Select Survival Time Data:", choices = metacol_survtime)
       
     }
     
   })
+  
+  ## Select survival type selection based on meta columns (ex. OS vs EFS)
+  output$rendSurvivalType_id <- renderUI({
+    
+    ## Only show if more than one option
+    if (length(metacol_survid > 1)) {
+      
+      selectInput("SurvivalType_id","Select Survival ID Data:", choices = metacol_survid)
+      
+    }
+    
+  })
+  
+  
+  
+  output$rendBoxplotFeature <- renderUI({
+    
+    
+    if (length(unique(meta[,metacol_sampletype])) > 1) {
+      
+      if (input$SampleTypeSelection != "All_Sample_Types") {
+        
+        selectInput("BoxplotFeature","Select Feature:",
+                    choices = metacol_feature)
+        
+      }
+      else if (input$SampleTypeSelection == "All_Sample_Types") {
+        
+        selectInput("BoxplotFeature","Select Feature:",
+                    choices = c(metacol_sampletype,metacol_feature))
+        
+      }
+      
+    }
+    else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+      
+      selectInput("BoxplotFeature","Select Feature:",
+                  choices = metacol_feature)
+      
+    }
+    
+  })
+  
+  output$rendHeatmapFeature <- renderUI({
+    
+    if (length(unique(meta[,metacol_sampletype])) > 1) {
+      
+      if (input$SampleTypeSelection != "All_Sample_Types") {
+        
+        selectInput("HeatmapFeature","Select Feature:",
+                    choices = metacol_feature)
+        
+      }
+      else if (input$SampleTypeSelection == "All_Sample_Types") {
+        
+        selectInput("HeatmapFeature","Select Feature:",
+                    choices = c(metacol_sampletype,metacol_feature))
+        
+      }
+      
+    }
+    else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+      
+      selectInput("HeatmapFeature","Select Feature:",
+                  choices = metacol_feature)
+      
+    }
+    
+  })
+  
+  
+  
+  output$rendSurvFeatVariableUni <- renderUI({
+    
+    if (input$UniVarContCheck == FALSE) {
+      
+      Feature <- input$SingleSurvivalFeature
+      metaSub <- ssGSEAmeta()
+      Var_choices <- unique(metaSub[,Feature])
+      if (input$UniVarNAcheck == TRUE) {
+        
+        Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
+        Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
+        
+      }
+      Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
+      selectInput("SurvFeatVariableUni","Select Coxh Feature Reference:",
+                  choices = Var_choices)
+      
+    }
+   
+  })
+  
+  output$rendSurvFeatVariableBi1 <- renderUI({
+    
+    if (input$BiVarAddContCheck1 == FALSE) {
+    
+      Feature <- input$SurvivalFeatureBi1
+      metaSub <- ssGSEAmeta()
+      Var_choices <- unique(metaSub[,Feature])
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
+        Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
+        
+      }
+      Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
+      selectInput("SurvFeatVariableBi1","Select Coxh Feature 1 Reference:",
+                  choices = Var_choices)
+      
+    }
+    
+  })
+  
+  output$rendSurvFeatVariableBi2 <- renderUI({
+    
+    if (input$BiVarAddContCheck2 == FALSE) {
+      
+      Feature <- input$SurvivalFeatureBi2
+      metaSub <- ssGSEAmeta()
+      Var_choices <- unique(metaSub[,Feature])
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
+        Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
+        
+      }
+      Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
+      selectInput("SurvFeatVariableBi2","Select Coxh Feature 2 Reference:",
+                  choices = Var_choices)
+      
+    }
+    
+  })
+  
+  output$rendSurvFeatVariableBi1Inter <- renderUI({
+    
+    if (input$BiVarIntContCheck1 == FALSE) {
+      
+      Feature <- input$SurvivalFeatureBi1Inter
+      metaSub <- ssGSEAmeta()
+      Var_choices <- unique(metaSub[,Feature])
+      if (input$BiVarIntNAcheck1 == TRUE) {
+        
+        Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
+        Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
+        
+      }
+      Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
+      selectInput("SurvFeatVariableBi1Inter","Select Coxh Feature Reference Variable for Feature 1:",
+                  choices = Var_choices)
+      
+    }
+    
+  })
+  
+  output$rendSurvFeatVariableBi2Inter <- renderUI({
+    
+    if (input$BiVarIntContCheck2 == FALSE) {
+      
+      Feature <- input$SurvivalFeatureBi2Inter
+      metaSub <- ssGSEAmeta()
+      Var_choices <- unique(metaSub[,Feature])
+      if (input$BiVarIntNAcheck2 == TRUE) {
+        
+        Var_choices <- Var_choices[which(is.na(Var_choices) == FALSE)]
+        Var_choices <- Var_choices[grep("unknown",Var_choices,ignore.case = T, invert = T)]
+        
+      }
+      Var_choices <- sort(Var_choices, decreasing = T, na.last = T)
+      selectInput("SurvFeatVariableBi2Inter","Select Coxh Feature Reference Variable for Feature 2:",
+                  choices = Var_choices)
+      
+    }
+    
+  })
+  
+  
+  
+  
+  
+  
   
   ## Select ssGSEA function scoring method
   output$rendScoreMethodBox <- renderUI({
@@ -1203,14 +1363,14 @@ server <- function(input, output, session) {
     
     if (input$GeneSetTabs == 1) {
       
-      checkboxInput("ViewGeneSetGenes","View Genes in Seleted Gene Set", value = F)
+      checkboxInput("ViewGeneSetGenes","View Genes in Selected Gene Set", value = F)
       
     }
     
     else if (input$GeneSetTabs == 3) {
       
       req(input$userGeneSet)
-      checkboxInput("ViewGeneSetGenes","View Genes in Seleted Gene Set", value = F)
+      checkboxInput("ViewGeneSetGenes","View Genes in Selected Gene Set", value = F)
       
     }
     
@@ -1397,6 +1557,18 @@ server <- function(input, output, session) {
     
   })
   
+  output$ssgseaDensityTable <- renderDataTable({
+    
+    geneset <- gs_react()
+    GeneSet <- names(geneset)
+    ssgsea_meta <- ssGSEAmeta()
+    table <- ssgsea_meta[,c("SampleName",GeneSet)]
+    DT::datatable(table,
+                  options = list(scrollY = T),
+                  rownames = F)
+    
+  })
+  
   ## Feature bloxplot table
   output$FeatureboxplotTable <- renderDataTable({
     
@@ -1558,8 +1730,8 @@ server <- function(input, output, session) {
     expr <- exprSub()                     #Subset expression
     geneset <- gs_react()                 #Chosen Gene Set
     geneset_name <- names(geneset)        #Name of chosen gene set
-    scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
     quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+    quantCutoff2 <- input$QuantPercent2/100 #Quantile cutoff given by user
     if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
       surv_time_col <- metacol_survtime[1]
       surv_id_col <- metacol_survid[1]
@@ -1580,27 +1752,46 @@ server <- function(input, output, session) {
     rownames(expr_mat) <- rownames(expr_sub)
     colnames(expr_mat) <- colnames(expr_sub)
     
+    if (input$GeneSetTabs == 1 | input$GeneSetTabs == 3) {
+      
+      ## Perform ssGSEA with gs and new subset data
+      scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
+      ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
+      ## Transform
+      ssGSEA <- as.data.frame(t(ssGSEA))
+      ssGSEA$SampleName <- rownames(ssGSEA)
+      
+    }
+    else if (input$GeneSetTabs == 2) {
+      
+      if (input$RawOrSS == "Raw Gene Expression") {
+        
+        expr_sub2 <- expr_sub[geneset_name,]
+        expr_sub3 <- as.data.frame(t(expr_sub2))
+        expr_sub3$SampleName <- rownames(expr_sub3)
+        ssGSEA <- expr_sub3
+        
+      }
+      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        
+        ## Perform ssGSEA with gs and new subset data
+        scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
+        ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
+        ## Transform
+        ssGSEA <- as.data.frame(t(ssGSEA))
+        ssGSEA$SampleName <- rownames(ssGSEA)
+        
+      }
+      
+    }
     
-    #expr_mat <- as.matrix(expr)
-    
-    ## Perform ssGSEA with gs and new subset data
-    ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
-    
-    ## Transform
-    ssGSEA <- as.data.frame(t(ssGSEA))
-    ssGSEA$SampleName <- rownames(ssGSEA)
-    
-    ### Perform further functions
-    #ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-    #ssGSEA$Quartile <- paste("", ssGSEA$VAR_Q, sep="")
-    #ssGSEA$BIN <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
-    #ssGSEA$Quantile <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
     
     ## Perform further functions
     ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
     ssGSEA$QuartilePScore <- paste("", ssGSEA$VAR_Q, sep="")
     ssGSEA$HiLoPScore <- highlow(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
     ssGSEA$QuantCutoffPScore <- quantile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff)
+    ssGSEA$AboveBelowCutoffPScore <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
     
     ## Merge with meta
     meta_ssGSEA <- merge(meta,ssGSEA, by = "SampleName", all = T)
@@ -1677,7 +1868,7 @@ server <- function(input, output, session) {
   ####----Survival Plots----####
   
   ## Survival Plot - Quartile
-  output$Splot <- renderPlot({
+  Splot_react <- reactive({
     
     ## Assign variables
     geneset <- gs_react()
@@ -1719,11 +1910,23 @@ server <- function(input, output, session) {
       SampleTypeLab <- " "
     }
     
+    if (input$GeneSetTabs == 2) {
+      if (input$RawOrSS == "Raw Gene Expression") {
+        scoreMethodLab <- "Raw Gene Expression"
+      }
+      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+      }
+    }
+    else if (input$GeneSetTabs != 2) {
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+    }
+    
     if (is.null(input$SurvXaxis) == TRUE) {
       
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
-                           title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n", geneset_name," (",scoreMethod," score in quartiles)", sep = ""),
+                           title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n", geneset_name," (",scoreMethodLab," in quartiles)", sep = ""),
                            xscale = c("d_y"),
                            break.time.by=365.25,
                            xlab = "Years", 
@@ -1770,8 +1973,13 @@ server <- function(input, output, session) {
     
   })
   
+  output$Splot <- renderPlot({
+    plot <- Splot_react()
+    plot
+  })
+  
   ## Survival Plot - Binary
-  output$SplotBIN <- renderPlot({
+  SplotBIN_react <- reactive({
     
     ## Assign variables
     geneset <- gs_react()
@@ -1813,18 +2021,30 @@ server <- function(input, output, session) {
       SampleTypeLab <- " "
     }
     
+    if (input$GeneSetTabs == 2) {
+      if (input$RawOrSS == "Raw Gene Expression") {
+        scoreMethodLab <- "Raw Gene Expression"
+      }
+      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+      }
+    }
+    else if (input$GeneSetTabs != 2) {
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+    }
+    
     if (is.null(input$SurvXaxis) == TRUE) {
       
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                            title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n",
-                                         geneset_name," (",scoreMethod, " Median Cutoff)", sep = ""),
+                                         geneset_name," (",scoreMethodLab, " Median Cutoff)", sep = ""),
                            xscale = c("d_y"),
                            break.time.by=365.25,
                            xlab = "Years", 
                            ylab = paste(SurvDateType,"Survival Probability"),
                            submain = "Based on Kaplan-Meier estimates",
-                           caption = "created with survminer", pval=F, ggtheme = theme_bw(),
+                           caption = "created with survminer", pval=T, ggtheme = theme_bw(),
                            font.title = c(16, "bold"),
                            font.submain = c(12, "italic"),
                            font.caption = c(12, "plain"),
@@ -1868,8 +2088,15 @@ server <- function(input, output, session) {
     
   })
   
+  output$SplotBIN <- renderPlot({
+    
+    plot <- SplotBIN_react()
+    plot
+    
+  })
+  
   ## Survival Plot - Quantile
-  output$SquantPlot <- renderPlot({
+  SquantPlot_react <- reactive({
     
     ## Assign variables
     geneset <- gs_react()
@@ -1917,12 +2144,24 @@ server <- function(input, output, session) {
       SampleTypeLab <- " "
     }
     
+    if (input$GeneSetTabs == 2) {
+      if (input$RawOrSS == "Raw Gene Expression") {
+        scoreMethodLab <- "Raw Gene Expression"
+      }
+      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+      }
+    }
+    else if (input$GeneSetTabs != 2) {
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+    }
+    
     if (is.null(input$SurvXaxis) == TRUE) {
       
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                            title = paste("Survival curves of ", Feature,SampleTypeLab,"\n",
-                                         geneset_name," (Top (Bottom) ",labelQuantCutoff," Patients Split based on ",scoreMethod," score)", sep = ""),
+                                         geneset_name," (Top (Bottom) ",labelQuantCutoff," Patients Split based on ",scoreMethodLab," )", sep = ""),
                            xscale = c("d_y"),
                            break.time.by=365.25,
                            xlab = "Years", 
@@ -1972,8 +2211,134 @@ server <- function(input, output, session) {
     
   })
   
+  output$SquantPlot <- renderPlot({
+    plot <- SquantPlot_react()
+    plot
+  })
+  
+  ## Survival Plot - Quantile
+  SquantPlot2_react <- reactive({
+    
+    ## Assign variables
+    geneset <- gs_react()
+    geneset_name <- names(geneset)
+    SampleType <- input$SampleTypeSelection
+    Feature <- input$FeatureSelection
+    scoreMethod <- input$ScoreMethod
+    xaxlim <- input$SurvXaxis * 365.25
+    quantCutoffOG <- input$QuantPercent2
+    quantCutoff <- input$QuantPercent2/100
+    labelQuantCutoff <- paste(quantCutoffOG,"%",sep = "")
+    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+      surv_time_col <- metacol_survtime[1]
+      surv_id_col <- metacol_survid[1]
+    }
+    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+      surv_time_col <- input$SurvivalType_time
+      surv_id_col <- input$SurvivalType_id
+    }
+    expr <- exprSub()
+    meta_ssgsea <- ssGSEAmeta()
+    
+    ## Determine type of survival data - OS/EFS/PFS?
+    SurvDateType <- sub("\\..*","",surv_time_col)
+    
+    ## Remove rows with NA in survival column
+    meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+    
+    ## Subset columns needed for plot
+    meta_ssgsea_sdf <- meta_ssgsea[,c("SampleName",surv_time_col,surv_id_col,"AboveBelowCutoffPScore")]
+    colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "OS.time"
+    colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "OS.ID"
+    
+    ## Remove between cutoff samples
+    #meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf$QuantCutoffPScore != "BetweenCutoff"),]
+    
+    ## Survival Function
+    fit <- survfit(Surv(OS.time,OS.ID) ~ AboveBelowCutoffPScore, data = meta_ssgsea_sdf, type="kaplan-meier")
+    
+    ## Adjust 'Sample Type' for label 
+    if (length(unique(meta[,metacol_sampletype])) > 1) {
+      SampleTypeLab <- paste(" (",SampleType,") ",sep = "")
+    }
+    if (length(unique(meta[,metacol_sampletype])) <= 1) {
+      SampleTypeLab <- " "
+    }
+    
+    if (input$GeneSetTabs == 2) {
+      if (input$RawOrSS == "Raw Gene Expression") {
+        scoreMethodLab <- "Raw Gene Expression"
+      }
+      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+      }
+    }
+    else if (input$GeneSetTabs != 2) {
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
+    }
+    
+    if (is.null(input$SurvXaxis) == TRUE) {
+      
+      ## Generate plot
+      ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+                           title = paste("Survival curves of ", Feature,SampleTypeLab,"\n",
+                                         geneset_name," (Above (Below) ",labelQuantCutoff," Patients Split based on ",scoreMethodLab," )", sep = ""),
+                           xscale = c("d_y"),
+                           break.time.by=365.25,
+                           xlab = "Years", 
+                           ylab = paste(SurvDateType,"Survival Probability"),
+                           submain = "Based on Kaplan-Meier estimates",
+                           caption = "created with survminer", pval=TRUE, ggtheme = theme_bw(),
+                           font.title = c(16, "bold"),
+                           font.submain = c(12, "italic"),
+                           font.caption = c(12, "plain"),
+                           font.x = c(14, "plain"),
+                           font.y = c(14, "plain"),
+                           font.tickslab = c(12, "plain")
+      )
+      
+      ggsurv$table <- ggsurv$table + theme_cleantable()
+      ggsurv
+      
+    }
+    
+    else if (is.null(input$SurvXaxis) == FALSE) {
+      
+      ## Generate plot
+      ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
+                           title = paste("Survival curves of ", Feature,SampleTypeLab,"\n",
+                                         geneset_name," (Above (Below) ",labelQuantCutoff," Patients Split based on ",scoreMethod," score)", sep = ""),
+                           xscale = c("d_y"),
+                           break.time.by=365.25,
+                           xlab = "Years", 
+                           ylab = paste(SurvDateType,"Survival Probability"),
+                           submain = "Based on Kaplan-Meier estimates",
+                           caption = "created with survminer", pval=TRUE, ggtheme = theme_bw(),
+                           font.title = c(16, "bold"),
+                           font.submain = c(12, "italic"),
+                           font.caption = c(12, "plain"),
+                           font.x = c(14, "plain"),
+                           font.y = c(14, "plain"),
+                           font.tickslab = c(12, "plain"),
+                           xlim = c(0,xaxlim)
+      )
+      
+      ggsurv$table <- ggsurv$table + theme_cleantable()
+      ggsurv
+      
+    }
+    
+    
+    
+  })
+  
+  output$SquantPlot2 <- renderPlot({
+    plot <- SquantPlot2_react()
+    plot
+  })
+  
   ## Survival Plot - SINGLE FEATURE
-  output$featSplot <- renderPlot({
+  featSplot_react <- reactive({
     
     if (length(input$SingleSurvivalFeature > 0)) {
       
@@ -2001,10 +2366,31 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$UniVarNAcheck == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
       #select_cols <- c("SampleName",surv_time_col,surv_id_col,"Prim.Tumor.Grade")
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$UniVarNAcheck == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       Feature <- gsub("[[:punct:]]","_",Feature)
@@ -2078,8 +2464,13 @@ server <- function(input, output, session) {
     
   })
   
+  output$featSplot <- renderPlot({
+    plot <- featSplot_react()
+    plot
+  })
+  
   ## Survival Plot - TWO FEATURE
-  output$featSplotBi <- renderPlot({
+  featSplotBi_react <- reactive({
     
     if (length(input$SurvivalFeatureBi1Inter > 0) & length(input$SurvivalFeatureBi2Inter> 0)) {
       
@@ -2108,9 +2499,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarIntNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarIntNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarIntNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarIntNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       Feature1 <- gsub("[[:punct:]]","_",Feature1)
@@ -2141,7 +2571,7 @@ server <- function(input, output, session) {
                              xlab = "Years", 
                              ylab = paste(SurvDateType,"Survival Probability"),
                              submain = "Based on Kaplan-Meier estimates",
-                             caption = "created with survminer", pval=F, ggtheme = theme_bw(),
+                             caption = "created with survminer", pval=T, ggtheme = theme_bw(),
                              font.title = c(16, "bold"),
                              font.submain = c(12, "italic"),
                              font.caption = c(12, "plain"),
@@ -2186,8 +2616,13 @@ server <- function(input, output, session) {
     
   })
   
+  output$featSplotBi <- renderPlot({
+    plot <- featSplotBi_react()
+    plot
+  })
+  
   ## Survival Plot - TWO FEATURE
-  output$featSplotBiInter <- renderPlot({
+  featSplotBiInter_react <- reactive({
     
     if (length(input$SurvivalFeatureBi1Inter > 0) & length(input$SurvivalFeatureBi2Inter > 0)) {
       
@@ -2292,6 +2727,11 @@ server <- function(input, output, session) {
       
     }
     
+  })
+  
+  output$featSplotBiInter <- renderPlot({
+    plot <- featSplotBiInter_react()
+    plot
   })
   
   
@@ -2437,110 +2877,152 @@ server <- function(input, output, session) {
   
   output$SSingleFeatureHRtab <- renderTable({
     
-    if (length(input$SingleSurvivalFeature > 0)) {
-      ## Assign variables
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      SampleType <- input$SampleTypeSelection
-      Feature <- input$SingleSurvivalFeature
-      ref_Feature <- input$SurvFeatVariableUni
-      scoreMethod <- input$ScoreMethod
-      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-        surv_time_col <- metacol_survtime[1]
-        surv_id_col <- metacol_survid[1]
+    if (input$UniVarContCheck == TRUE) {
+      
+      if (length(input$SingleSurvivalFeature > 0)) {
+        ## Assign variables
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SampleType <- input$SampleTypeSelection
+        Feature <- input$SingleSurvivalFeature
+        scoreMethod <- input$ScoreMethod
+        if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+          surv_time_col <- metacol_survtime[1]
+          surv_id_col <- metacol_survid[1]
+        }
+        if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+          surv_time_col <- input$SurvivalType_time
+          surv_id_col <- input$SurvivalType_id
+        }
+        expr <- exprSub()
+        meta_ssgsea <- ssGSEAmeta()
+        
+        ## Determine type of survival data - OS/EFS/PFS?
+        SurvDateType <- sub("\\..*","",surv_time_col)
+        
+        ## Remove rows with NA in survival column
+        meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+        
+        quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+        if (input$UniVarNAcheck == TRUE) {
+          
+          # Remove NA_unknown
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+          ## Re-Perform Stat functions
+          meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+          meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+          meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+          meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+          
+        }
+        
+        ## Subset columns needed for plot and rename for surv function
+        select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
+        meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+        
+        #if (input$UniVarNAcheck == TRUE) {
+        #  
+        #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature]) == FALSE),]
+        #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature],ignore.case = T, invert = T),]
+        #  
+        #}
+        
+        colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
+        Feature <- gsub("[[:punct:]]","_",Feature)
+        
+        
+        ## Survival Function
+        tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
+                     data = meta_ssgsea_sdf) %>% 
+          gtsummary::tbl_regression(exp = TRUE) %>%
+          as_gt()
+        
+        tab_df <- as.data.frame(tab)
+        tab_df[is.na(tab_df)] <- ""
+        tab_df <- tab_df %>%
+          select(label,n_obs,estimate,std.error,ci,p.value)
+        colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
+        
+        tab_df
       }
-      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
-      }
-      expr <- exprSub()
-      meta_ssgsea <- ssGSEAmeta()
       
-      ## Determine type of survival data - OS/EFS/PFS?
-      SurvDateType <- sub("\\..*","",surv_time_col)
-      
-      ## Remove rows with NA in survival column
-      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-      
-      ## Subset columns needed for plot and rename for surv function
-      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
-      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-      
-      meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
-      meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
-      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      Feature <- gsub("[[:punct:]]","_",Feature)
-      
-      
-      ## Survival Function
-      tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
-                   data = meta_ssgsea_sdf) %>% 
-        gtsummary::tbl_regression(exp = TRUE) %>%
-        as_gt()
-      
-      tab_df <- as.data.frame(tab)
-      tab_df[is.na(tab_df)] <- ""
-      tab_df <- tab_df %>%
-        select(label,n_obs,estimate,std.error,ci,p.value)
-      colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
-      
-      tab_df
     }
     
-    
-  })
-  
-  output$SSingleFeatureHRtabCont <- renderTable({
-    
-    if (length(input$SingleSurvivalFeature > 0)) {
-      ## Assign variables
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      SampleType <- input$SampleTypeSelection
-      Feature <- input$SingleSurvivalFeature
-      #ref_Feature <- input$SurvFeatVariableUni
-      scoreMethod <- input$ScoreMethod
-      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-        surv_time_col <- metacol_survtime[1]
-        surv_id_col <- metacol_survid[1]
+    else if (input$UniVarContCheck == FALSE) {
+      
+      if (length(input$SingleSurvivalFeature > 0)) {
+        ## Assign variables
+        geneset <- gs_react()
+        geneset_name <- names(geneset)
+        SampleType <- input$SampleTypeSelection
+        Feature <- input$SingleSurvivalFeature
+        ref_Feature <- input$SurvFeatVariableUni
+        scoreMethod <- input$ScoreMethod
+        if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+          surv_time_col <- metacol_survtime[1]
+          surv_id_col <- metacol_survid[1]
+        }
+        if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+          surv_time_col <- input$SurvivalType_time
+          surv_id_col <- input$SurvivalType_id
+        }
+        expr <- exprSub()
+        meta_ssgsea <- ssGSEAmeta()
+        
+        ## Determine type of survival data - OS/EFS/PFS?
+        SurvDateType <- sub("\\..*","",surv_time_col)
+        
+        ## Remove rows with NA in survival column
+        meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+        
+        quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+        if (input$UniVarNAcheck == TRUE) {
+          
+          # Remove NA_unknown
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+          ## Re-Perform Stat functions
+          meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+          meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+          meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+          meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+          
+        }
+        
+        ## Subset columns needed for plot and rename for surv function
+        select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
+        meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+        
+        #if (input$UniVarNAcheck == TRUE) {
+        #  
+        #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature]) == FALSE),]
+        #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature],ignore.case = T, invert = T),]
+        #  
+        #}
+        
+        meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
+        meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
+        colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
+        Feature <- gsub("[[:punct:]]","_",Feature)
+        
+        
+        ## Survival Function
+        tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
+                     data = meta_ssgsea_sdf) %>% 
+          gtsummary::tbl_regression(exp = TRUE) %>%
+          as_gt()
+        
+        tab_df <- as.data.frame(tab)
+        tab_df[is.na(tab_df)] <- ""
+        tab_df <- tab_df %>%
+          select(label,n_obs,estimate,std.error,ci,p.value)
+        colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
+        
+        tab_df
       }
-      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
-      }
-      expr <- exprSub()
-      meta_ssgsea <- ssGSEAmeta()
       
-      ## Determine type of survival data - OS/EFS/PFS?
-      SurvDateType <- sub("\\..*","",surv_time_col)
-      
-      ## Remove rows with NA in survival column
-      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-      
-      ## Subset columns needed for plot and rename for surv function
-      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
-      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-      #meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
-      #meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
-      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      Feature <- gsub("[[:punct:]]","_",Feature)
-      
-      
-      ## Survival Function
-      tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
-                   data = meta_ssgsea_sdf) %>% 
-        gtsummary::tbl_regression(exp = TRUE) %>%
-        as_gt()
-      
-      tab_df <- as.data.frame(tab)
-      tab_df[is.na(tab_df)] <- ""
-      tab_df <- tab_df %>%
-        select(label,n_obs,estimate,std.error,ci,p.value)
-      colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
-      
-      tab_df
     }
-    
     
   })
   
@@ -2573,9 +3055,49 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarAddNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarAddNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
@@ -2586,73 +3108,21 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
-      
-      #meta_ssgsea_sdf[,Feature1] <- as.factor(meta_ssgsea_sdf[,Feature1])
-      #meta_ssgsea_sdf[,Feature2] <- as.factor(meta_ssgsea_sdf[,Feature2])
-      
-      #colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      #Feature1 <- gsub("[[:punct:]]","_",Feature1)
-      #colnames(meta_ssgsea_sdf)[5] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[5])
-      #Feature2 <- gsub("[[:punct:]]","_",Feature2)
-      
-      
-      ## Survival Function
-      tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
-                   data = meta_ssgsea_sdf) %>% 
-        gtsummary::tbl_regression(exp = TRUE) %>%
-        as_gt()
-      
-      tab_df <- as.data.frame(tab)
-      tab_df[is.na(tab_df)] <- ""
-      tab_df <- tab_df %>%
-        select(label,n_obs,estimate,std.error,ci,p.value)
-      colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
-      
-      tab_df
-    }
-    
-    
-  })
-  
-  output$BiFeatureHRtabCont <- renderTable({
-    
-    if (length(input$SurvivalFeatureBi1 > 0) & length(input$SurvivalFeatureBi2 > 0)) {
-      ## Assign variables
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      SampleType <- input$SampleTypeSelection
-      Feature1 <- input$SurvivalFeatureBi1
-      Feature2 <- input$SurvivalFeatureBi2
-      scoreMethod <- input$ScoreMethod
-      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-        surv_time_col <- metacol_survtime[1]
-        surv_id_col <- metacol_survid[1]
+      if (input$BiVarAddContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
       }
-      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
+      else if (input$BiVarAddContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
       }
-      expr <- exprSub()
-      meta_ssgsea <- ssGSEAmeta()
+      if (input$BiVarAddContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarAddContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
-      ## Determine type of survival data - OS/EFS/PFS?
-      SurvDateType <- sub("\\..*","",surv_time_col)
-      
-      ## Remove rows with NA in survival column
-      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-      
-      ## Subset columns needed for plot and rename for surv function
-      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
-      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-      
-      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      Feature1 <- gsub("[[:punct:]]","_",Feature1)
-      colnames(meta_ssgsea_sdf)[5] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[5])
-      Feature2 <- gsub("[[:punct:]]","_",Feature2)
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
@@ -2701,9 +3171,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarIntNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarIntNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarIntNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarIntNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
@@ -2714,64 +3223,25 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
       
-      ## Survival Function
-      tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
-                   data = meta_ssgsea_sdf) %>% 
-        gtsummary::tbl_regression(exp = TRUE) %>%
-        as_gt()
-      
-      tab_df <- as.data.frame(tab)
-      tab_df[is.na(tab_df)] <- ""
-      tab_df <- tab_df %>%
-        select(label,n_obs,estimate,std.error,ci,p.value)
-      colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
-      
-      tab_df
-    }
-    
-    
-  })
-  
-  output$BiFeatureHRtabContInter <- renderTable({
-    
-    if (length(input$SurvivalFeatureBi1Inter > 0) & length(input$SurvivalFeatureBi2Inter > 0)) {
-      ## Assign variables
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      SampleType <- input$SampleTypeSelection
-      Feature1 <- input$SurvivalFeatureBi1Inter
-      Feature2 <- input$SurvivalFeatureBi2Inter
-      scoreMethod <- input$ScoreMethod
-      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-        surv_time_col <- metacol_survtime[1]
-        surv_id_col <- metacol_survid[1]
+      if (input$BiVarIntContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
       }
-      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
+      else if (input$BiVarIntContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
       }
-      expr <- exprSub()
-      meta_ssgsea <- ssGSEAmeta()
-      
-      ## Determine type of survival data - OS/EFS/PFS?
-      SurvDateType <- sub("\\..*","",surv_time_col)
-      
-      ## Remove rows with NA in survival column
-      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-      
-      ## Subset columns needed for plot and rename for surv function
-      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
-      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-      
-      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      Feature1 <- gsub("[[:punct:]]","_",Feature1)
-      colnames(meta_ssgsea_sdf)[5] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[5])
-      Feature2 <- gsub("[[:punct:]]","_",Feature2)
+      if (input$BiVarIntContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarIntContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
@@ -2817,9 +3287,36 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$MultiVarNAcheck == TRUE) {
+        
+        for (i in Feature){
+          # Remove NA_unknown
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+        }
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      
+      #if (input$MultiVarNAcheck == TRUE) {
+      #  
+      #  for (i in Feature){
+      #    
+      #    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,i]) == FALSE),]
+      #    meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,i],ignore.case = T, invert = T),]
+      #  }
+      #  
+      #}
       
       for (i in Feature){
         meta_ssgsea_sdf[,i] <- as.factor(meta_ssgsea_sdf[,i])
@@ -2878,9 +3375,35 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$MultiVarNAcheck == TRUE) {
+        
+        for (i in Feature){
+          # Remove NA_unknown
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+        }
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$MultiVarNAcheck == TRUE) {
+      #  
+      #  for (i in Feature){
+      #    
+      #    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,i]) == FALSE),]
+      #    meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,i],ignore.case = T, invert = T),]
+      #  }
+      #  
+      #}
       
       for (i in Feature) {
         
@@ -2941,6 +3464,22 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$MultiVarNAcheck == TRUE) {
+        
+        for (i in Feature){
+          # Remove NA_unknown
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+        }
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
@@ -2994,6 +3533,22 @@ server <- function(input, output, session) {
       
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+      
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$MultiVarNAcheck == TRUE) {
+        
+        for (i in Feature){
+          # Remove NA_unknown
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+        }
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
       
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
@@ -3052,9 +3607,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarAddNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarAddNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
@@ -3065,10 +3659,25 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarAddContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarAddContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarAddContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarAddContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
@@ -3171,9 +3780,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarAddNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarAddNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
       
@@ -3186,10 +3834,28 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #only rows with both features
+      meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
+      
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarAddContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarAddContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarAddContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarAddContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab1 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
@@ -3242,9 +3908,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarAddNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarAddNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
       
@@ -3258,135 +3963,28 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
-      
-      ## Survival Function
-      tab1 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
-                    data = meta_ssgsea_sdf)
-      tab2 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature2,sep = "")),
-                    data = meta_ssgsea_sdf)
-      
-      annova_res <- anova(tab1,tab2)
-      
-      out <- capture.output(annova_res)
-      
-      line1 <- out[3]
-      line2 <- out[4]
-      line3 <- out[5]
-      line4 <- out[6]
-      line5 <- out[7]
-      
-      text <- paste("Model Comparison:",line1,line2,line3,line4,line5,sep = "\n")
-      cat(text)
-    }
-    
-  })
-  
-  output$bivarAnova1Cont <- renderPrint({
-    
-    if (length(input$SurvivalFeatureBi1 > 0) & length(input$SurvivalFeatureBi2 > 0)) {
-      ## Assign variables
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      SampleType <- input$SampleTypeSelection
-      Feature1 <- input$SurvivalFeatureBi1
-      Feature2 <- input$SurvivalFeatureBi2
-      Feat1Var <- input$SurvFeatVariableBi1
-      Feat2Var <- input$SurvFeatVariableBi2
-      scoreMethod <- input$ScoreMethod
-      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-        surv_time_col <- metacol_survtime[1]
-        surv_id_col <- metacol_survid[1]
-      }
-      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
-      }
-      expr <- exprSub()
-      meta_ssgsea <- ssGSEAmeta()
-      
-      ## Determine type of survival data - OS/EFS/PFS?
-      SurvDateType <- sub("\\..*","",surv_time_col)
-      
-      ## Remove rows with NA in survival column
-      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-      
-      ## Subset columns needed for plot and rename for surv function
-      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
-      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-      
+      #only rows with both features
       meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
       
-      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      Feature1 <- gsub("[[:punct:]]","_",Feature1)
-      colnames(meta_ssgsea_sdf)[5] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[5])
-      Feature2 <- gsub("[[:punct:]]","_",Feature2)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
       
-      ## Survival Function
-      tab1 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
-                    data = meta_ssgsea_sdf)
-      tab2 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature1,sep = "")),
-                    data = meta_ssgsea_sdf)
-      
-      annova_res <- anova(tab1,tab2)
-      
-      out <- capture.output(annova_res)
-      
-      line1 <- out[3]
-      line2 <- out[4]
-      line3 <- out[5]
-      line4 <- out[6]
-      line5 <- out[7]
-      
-      text <- paste("Model Comparison:",line1,line2,line3,line4,line5,sep = "\n")
-      cat(text)
-    }
-    
-  })
-  
-  output$bivarAnova2Cont <- renderPrint({
-    
-    if (length(input$SurvivalFeatureBi1 > 0) & length(input$SurvivalFeatureBi2 > 0)) {
-      ## Assign variables
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      SampleType <- input$SampleTypeSelection
-      Feature1 <- input$SurvivalFeatureBi1
-      Feature2 <- input$SurvivalFeatureBi2
-      Feat1Var <- input$SurvFeatVariableBi1
-      Feat2Var <- input$SurvFeatVariableBi2
-      scoreMethod <- input$ScoreMethod
-      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-        surv_time_col <- metacol_survtime[1]
-        surv_id_col <- metacol_survid[1]
+      if (input$BiVarAddContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
       }
-      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
+      else if (input$BiVarAddContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
       }
-      expr <- exprSub()
-      meta_ssgsea <- ssGSEAmeta()
-      
-      ## Determine type of survival data - OS/EFS/PFS?
-      SurvDateType <- sub("\\..*","",surv_time_col)
-      
-      ## Remove rows with NA in survival column
-      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-      
-      ## Subset columns needed for plot and rename for surv function
-      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
-      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-      
-      meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
-      
-      
-      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      Feature1 <- gsub("[[:punct:]]","_",Feature1)
-      colnames(meta_ssgsea_sdf)[5] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[5])
-      Feature2 <- gsub("[[:punct:]]","_",Feature2)
+      if (input$BiVarAddContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarAddContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab1 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
@@ -3439,9 +4037,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarIntNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarIntNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarIntNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarIntNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
       
@@ -3455,15 +4092,30 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarIntContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarIntContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarIntContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarIntContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab1 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
                     data = meta_ssgsea_sdf)
-      tab2 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature1,sep = "")),
+      tab2 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
                     data = meta_ssgsea_sdf)
       
       annova_res <- anova(tab1,tab2)
@@ -3482,76 +4134,91 @@ server <- function(input, output, session) {
     
   })
   
-  output$bivarAnovaInter2 <- renderPrint({
-    
-    if (length(input$SurvivalFeatureBi1 > 0) & length(input$SurvivalFeatureBi2 > 0)) {
-      ## Assign variables
-      geneset <- gs_react()
-      geneset_name <- names(geneset)
-      SampleType <- input$SampleTypeSelection
-      Feature1 <- input$SurvivalFeatureBi1Inter
-      Feature2 <- input$SurvivalFeatureBi2Inter
-      Feat1Var <- input$SurvFeatVariableBi1Inter
-      Feat2Var <- input$SurvFeatVariableBi2Inter
-      scoreMethod <- input$ScoreMethod
-      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-        surv_time_col <- metacol_survtime[1]
-        surv_id_col <- metacol_survid[1]
-      }
-      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-        surv_time_col <- input$SurvivalType_time
-        surv_id_col <- input$SurvivalType_id
-      }
-      expr <- exprSub()
-      meta_ssgsea <- ssGSEAmeta()
-      
-      ## Determine type of survival data - OS/EFS/PFS?
-      SurvDateType <- sub("\\..*","",surv_time_col)
-      
-      ## Remove rows with NA in survival column
-      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-      
-      ## Subset columns needed for plot and rename for surv function
-      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
-      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-      
-      meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
-      
-      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-      meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
-      Feature1 <- gsub("[[:punct:]]","_",Feature1)
-      Feat1Var <- gsub("[[:punct:]]","_",Feat1Var)
-      colnames(meta_ssgsea_sdf)[5] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[5])
-      meta_ssgsea_sdf[,5] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,5])
-      Feature2 <- gsub("[[:punct:]]","_",Feature2)
-      Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
-      
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
-      
-      ## Survival Function
-      tab1 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
-                    data = meta_ssgsea_sdf)
-      tab2 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature2,sep = "")),
-                    data = meta_ssgsea_sdf)
-      
-      annova_res <- anova(tab1,tab2)
-      
-      out <- capture.output(annova_res)
-      
-      line1 <- out[3]
-      line2 <- out[4]
-      line3 <- out[5]
-      line4 <- out[6]
-      line5 <- out[7]
-      
-      text <- paste("Model Comparison:",line1,line2,line3,line4,line5,sep = "\n")
-      cat(text)
-    }
-    
-  })
+  #output$bivarAnovaInter2 <- renderPrint({
+  #  
+  #  if (length(input$SurvivalFeatureBi1 > 0) & length(input$SurvivalFeatureBi2 > 0)) {
+  #    ## Assign variables
+  #    geneset <- gs_react()
+  #    geneset_name <- names(geneset)
+  #    SampleType <- input$SampleTypeSelection
+  #    Feature1 <- input$SurvivalFeatureBi1Inter
+  #    Feature2 <- input$SurvivalFeatureBi2Inter
+  #    Feat1Var <- input$SurvFeatVariableBi1Inter
+  #    Feat2Var <- input$SurvFeatVariableBi2Inter
+  #    scoreMethod <- input$ScoreMethod
+  #    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+  #      surv_time_col <- metacol_survtime[1]
+  #      surv_id_col <- metacol_survid[1]
+  #    }
+  #    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+  #      surv_time_col <- input$SurvivalType_time
+  #      surv_id_col <- input$SurvivalType_id
+  #    }
+  #    expr <- exprSub()
+  #    meta_ssgsea <- ssGSEAmeta()
+  #    
+  #    ## Determine type of survival data - OS/EFS/PFS?
+  #    SurvDateType <- sub("\\..*","",surv_time_col)
+  #    
+  #    ## Remove rows with NA in survival column
+  #    meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+  #    
+  #    ## Subset columns needed for plot and rename for surv function
+  #    select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
+  #    meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+  #    
+  #    meta_ssgsea_sdf <- meta_ssgsea_sdf[complete.cases(meta_ssgsea_sdf),]
+  #    
+  #    colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
+  #    meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
+  #    Feature1 <- gsub("[[:punct:]]","_",Feature1)
+  #    Feat1Var <- gsub("[[:punct:]]","_",Feat1Var)
+  #    colnames(meta_ssgsea_sdf)[5] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[5])
+  #    meta_ssgsea_sdf[,5] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,5])
+  #    Feature2 <- gsub("[[:punct:]]","_",Feature2)
+  #    Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
+  #    
+  #    #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+  #    #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+  #    #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+  #    #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+  #    
+  #    if (input$BiVarIntContCheck1 == FALSE) {
+  #      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+  #      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+  #    }
+  #    else if (input$BiVarIntContCheck1 == TRUE) {
+  #      meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+  #    }
+  #    if (input$BiVarIntContCheck2 == FALSE) {
+  #      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+  #      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+  #    }
+  #    else if (input$BiVarIntContCheck2 == TRUE) {
+  #      meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+  #    }
+  #    
+  #    ## Survival Function
+  #    tab1 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
+  #                  data = meta_ssgsea_sdf)
+  #    tab2 <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature2,"+",Feature1,sep = ""),sep = "")),
+  #                  data = meta_ssgsea_sdf)
+  #    
+  #    annova_res <- anova(tab1,tab2)
+  #    
+  #    out <- capture.output(annova_res)
+  #    
+  #    line1 <- out[3]
+  #    line2 <- out[4]
+  #    line3 <- out[5]
+  #    line4 <- out[6]
+  #    line5 <- out[7]
+  #    
+  #    text <- paste("Model Comparison:",line1,line2,line3,line4,line5,sep = "\n")
+  #    cat(text)
+  #  }
+  #  
+  #})
   
   output$bivarSummaryInter <- renderPrint({
     
@@ -3582,9 +4249,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarIntNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarIntNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarIntNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarIntNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
@@ -3595,10 +4301,25 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarIntContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarIntContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarIntContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarIntContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
@@ -3619,103 +4340,128 @@ server <- function(input, output, session) {
   
   output$UnivarSummary <- renderPrint({
     
-    ## Assign variables
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    SampleType <- input$SampleTypeSelection
-    Feature <- input$SingleSurvivalFeature
-    ref_Feature <- input$SurvFeatVariableUni
-    scoreMethod <- input$ScoreMethod
-    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-      surv_time_col <- metacol_survtime[1]
-      surv_id_col <- metacol_survid[1]
+    if (input$UniVarContCheck == TRUE) {
+      
+      ## Assign variables
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      SampleType <- input$SampleTypeSelection
+      Feature <- input$SingleSurvivalFeature
+      ref_Feature <- input$SurvFeatVariableUni
+      scoreMethod <- input$ScoreMethod
+      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+        surv_time_col <- metacol_survtime[1]
+        surv_id_col <- metacol_survid[1]
+      }
+      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+        surv_time_col <- input$SurvivalType_time
+        surv_id_col <- input$SurvivalType_id
+      }
+      expr <- exprSub()
+      meta_ssgsea <- ssGSEAmeta()
+      
+      ## Determine type of survival data - OS/EFS/PFS?
+      SurvDateType <- sub("\\..*","",surv_time_col)
+      
+      ## Remove rows with NA in survival column
+      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+      
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$UniVarNAcheck == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
+      ## Subset columns needed for plot and rename for surv function
+      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
+      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$UniVarNAcheck == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature],ignore.case = T, invert = T),]
+      #  
+      #}
+      
+      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
+      Feature <- gsub("[[:punct:]]","_",Feature)
+      
+      
+      ## Survival Function
+      tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
+                   data = meta_ssgsea_sdf)
+      
+      out <- capture.output(summary(tab))
+      
+      con_line <- grep("^Concordance=",out,value = T)
+      lik_line <- grep("^Likelihood ratio test=",out,value = T)
+      wal_line <- grep("^Wald test",out,value = T)
+      sco_line <- grep("^Score ",out,value = T)
+      
+      text <- paste("Coxh Summary (Continuous):",con_line,lik_line,wal_line,sco_line,sep = "\n")
+      cat(text)
+      
     }
-    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-      surv_time_col <- input$SurvivalType_time
-      surv_id_col <- input$SurvivalType_id
+    
+    if (input$UniVarContCheck == FALSE) {
+      
+      ## Assign variables
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      SampleType <- input$SampleTypeSelection
+      Feature <- input$SingleSurvivalFeature
+      ref_Feature <- input$SurvFeatVariableUni
+      scoreMethod <- input$ScoreMethod
+      if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
+        surv_time_col <- metacol_survtime[1]
+        surv_id_col <- metacol_survid[1]
+      }
+      if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
+        surv_time_col <- input$SurvivalType_time
+        surv_id_col <- input$SurvivalType_id
+      }
+      expr <- exprSub()
+      meta_ssgsea <- ssGSEAmeta()
+      
+      ## Determine type of survival data - OS/EFS/PFS?
+      SurvDateType <- sub("\\..*","",surv_time_col)
+      
+      ## Remove rows with NA in survival column
+      meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
+      
+      ## Subset columns needed for plot and rename for surv function
+      select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
+      meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
+      meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
+      colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
+      Feature <- gsub("[[:punct:]]","_",Feature)
+      
+      
+      ## Survival Function
+      tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
+                   data = meta_ssgsea_sdf)
+      
+      out <- capture.output(summary(tab))
+      
+      con_line <- grep("^Concordance=",out,value = T)
+      lik_line <- grep("^Likelihood ratio test=",out,value = T)
+      wal_line <- grep("^Wald test",out,value = T)
+      sco_line <- grep("^Score ",out,value = T)
+      
+      text <- paste("Coxh Summary (Categorical):",con_line,lik_line,wal_line,sco_line,sep = "\n")
+      cat(text)
+      
     }
-    expr <- exprSub()
-    meta_ssgsea <- ssGSEAmeta()
-    
-    ## Determine type of survival data - OS/EFS/PFS?
-    SurvDateType <- sub("\\..*","",surv_time_col)
-    
-    ## Remove rows with NA in survival column
-    meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-    
-    ## Subset columns needed for plot and rename for surv function
-    select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
-    meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-    
-    meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
-    meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
-    colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-    Feature <- gsub("[[:punct:]]","_",Feature)
-    
-    
-    ## Survival Function
-    tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
-                 data = meta_ssgsea_sdf)
-    
-    out <- capture.output(summary(tab))
-    
-    con_line <- grep("^Concordance=",out,value = T)
-    lik_line <- grep("^Likelihood ratio test=",out,value = T)
-    wal_line <- grep("^Wald test",out,value = T)
-    sco_line <- grep("^Score ",out,value = T)
-    
-    text <- paste("Coxh Summary (Categorical):",con_line,lik_line,wal_line,sco_line,sep = "\n")
-    cat(text)
-    
-  })
-  
-  output$UnivarSummaryCont <- renderPrint({
-    
-    ## Assign variables
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    SampleType <- input$SampleTypeSelection
-    Feature <- input$SingleSurvivalFeature
-    ref_Feature <- input$SurvFeatVariableUni
-    scoreMethod <- input$ScoreMethod
-    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-      surv_time_col <- metacol_survtime[1]
-      surv_id_col <- metacol_survid[1]
-    }
-    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-      surv_time_col <- input$SurvivalType_time
-      surv_id_col <- input$SurvivalType_id
-    }
-    expr <- exprSub()
-    meta_ssgsea <- ssGSEAmeta()
-    
-    ## Determine type of survival data - OS/EFS/PFS?
-    SurvDateType <- sub("\\..*","",surv_time_col)
-    
-    ## Remove rows with NA in survival column
-    meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-    
-    ## Subset columns needed for plot and rename for surv function
-    select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
-    meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
-    
-    colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-    Feature <- gsub("[[:punct:]]","_",Feature)
-    
-    
-    ## Survival Function
-    tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",Feature,sep = "")),
-                 data = meta_ssgsea_sdf)
-    
-    out <- capture.output(summary(tab))
-    
-    con_line <- grep("^Concordance=",out,value = T)
-    lik_line <- grep("^Likelihood ratio test=",out,value = T)
-    wal_line <- grep("^Wald test",out,value = T)
-    sco_line <- grep("^Score ",out,value = T)
-    
-    text <- paste("Coxh Summary (Continuous):",con_line,lik_line,wal_line,sco_line,sep = "\n")
-    cat(text)
     
   })
   
@@ -3762,9 +4508,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarIntNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarIntNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
@@ -3775,10 +4560,25 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarIntContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarIntContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarIntContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarIntContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
@@ -3848,6 +4648,19 @@ server <- function(input, output, session) {
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
       
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+        meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+        
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+        meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+        
+      }
+      
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
       Feature1 <- gsub("[[:punct:]]","_",Feature1)
@@ -3857,10 +4670,25 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarAddContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarAddContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarAddContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarAddContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
@@ -3924,12 +4752,38 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$UniVarNAcheck == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
       
-      meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
-      meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
+      #if (input$UniVarNAcheck == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature],ignore.case = T, invert = T),]
+      #  
+      #}
+      
+      if (input$UniVarContCheck == FALSE) {
+        
+        meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
+        meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
+        
+      }
+      
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       Feature <- gsub("[[:punct:]]","_",Feature)
       
@@ -3985,9 +4839,35 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$MultiVarNAcheck == TRUE) {
+        
+        for (i in Feature){
+          # Remove NA_unknown
+          meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,i]) == FALSE),]
+          meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,i],ignore.case = T, invert = T),]
+        }
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$MultiVarNAcheck == TRUE) {
+      #  
+      #  for (i in Feature){
+      #    
+      #    meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,i]) == FALSE),]
+      #    meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,i],ignore.case = T, invert = T),]
+      #  }
+      #  
+      #}
       
       for (i in Feature){
         meta_ssgsea_sdf[,i] <- as.factor(meta_ssgsea_sdf[,i])
@@ -4038,9 +4918,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarAddNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarAddNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarAddNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarAddNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
@@ -4051,10 +4970,25 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarAddContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarAddContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarAddContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarAddContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"+",Feature2,sep = ""),sep = "")),
@@ -4099,9 +5033,48 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$BiVarIntNAcheck1 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature1]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature1],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      if (input$BiVarIntNAcheck2 == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature2]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature2],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature1,Feature2)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+      
+      #if (input$BiVarIntNAcheck1 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature1]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature1],ignore.case = T, invert = T),]
+      #  
+      #}
+      #if (input$BiVarIntNAcheck2 == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature2]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature2],ignore.case = T, invert = T),]
+      #  
+      #}
       
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       meta_ssgsea_sdf[,4] <- gsub("[[:punct:]]","_",meta_ssgsea_sdf[,4])
@@ -4112,10 +5085,25 @@ server <- function(input, output, session) {
       Feature2 <- gsub("[[:punct:]]","_",Feature2)
       Feat2Var <- gsub("[[:punct:]]","_",Feat2Var)
       
-      meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
-      meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
-      meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
-      meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      #meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+      #meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      #meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+      #meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      
+      if (input$BiVarIntContCheck1 == FALSE) {
+        meta_ssgsea_sdf[,Feature1] <- factor(meta_ssgsea_sdf[,Feature1])
+        meta_ssgsea_sdf[,Feature1] <- relevel(meta_ssgsea_sdf[,Feature1], ref = Feat1Var)
+      }
+      else if (input$BiVarIntContCheck1 == TRUE) {
+        meta_ssgsea_sdf[,Feature1] <- as.numeric(meta_ssgsea_sdf[,Feature1])
+      }
+      if (input$BiVarIntContCheck2 == FALSE) {
+        meta_ssgsea_sdf[,Feature2] <- factor(meta_ssgsea_sdf[,Feature2])
+        meta_ssgsea_sdf[,Feature2] <- relevel(meta_ssgsea_sdf[,Feature2], ref = Feat2Var)
+      }
+      else if (input$BiVarIntContCheck2 == TRUE) {
+        meta_ssgsea_sdf[,Feature2] <- as.numeric(meta_ssgsea_sdf[,Feature2])
+      }
       
       ## Survival Function
       tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",paste(Feature1,"*",Feature2,sep = ""),sep = "")),
@@ -4158,12 +5146,38 @@ server <- function(input, output, session) {
       ## Remove rows with NA in survival column
       meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
       
+      quantCutoff <- input$QuantPercent/100 #Quantile cutoff given by user
+      if (input$UniVarNAcheck == TRUE) {
+        
+        # Remove NA_unknown
+        meta_ssgsea <- meta_ssgsea[which(is.na(meta_ssgsea[,Feature]) == FALSE),]
+        meta_ssgsea <- meta_ssgsea[grep("unknown",meta_ssgsea[,Feature],ignore.case = T, invert = T),]
+        ## Re-Perform Stat functions
+        meta_ssgsea$VAR_Q <- quartile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuartilePScore <- paste("", meta_ssgsea$VAR_Q, sep="")
+        meta_ssgsea$HiLoPScore <- highlow(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)])
+        meta_ssgsea$QuantCutoffPScore <- quantile_conversion(meta_ssgsea[, which(colnames(meta_ssgsea) == geneset_name)], quantCutoff)
+        
+      }
+      
       ## Subset columns needed for plot and rename for surv function
       select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
       meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
       
-      meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
-      meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
+      #if (input$UniVarNAcheck == TRUE) {
+      #  
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature]) == FALSE),]
+      #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature],ignore.case = T, invert = T),]
+      #  
+      #}
+      
+      if (input$UniVarContCheck == FALSE) {
+        
+        meta_ssgsea_sdf[,Feature] <- as.factor(meta_ssgsea_sdf[,Feature])
+        meta_ssgsea_sdf[,Feature] <- relevel(meta_ssgsea_sdf[,Feature], ref = ref_Feature)
+        
+      }
+      
       colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
       Feature <- gsub("[[:punct:]]","_",Feature)
       
@@ -4475,6 +5489,62 @@ server <- function(input, output, session) {
     
   })
   
+  ssgseaDensity_react <- reactive({
+    
+    geneset <- gs_react()
+    geneset_name <- names(geneset)
+    ssgsea_meta <- ssGSEAmeta()
+    user_quant <- input$densityPercent/100
+    ShowQuartile <- input$QuartileLinesCheck
+    scoreMethod <- input$ScoreMethod
+    
+    cols_selec <- c("SampleName",geneset_name)
+    ssgsea_scores <- ssgsea_meta[,cols_selec]
+    
+    quant_df <- data.frame(quantile(ssgsea_scores[,geneset_name]))
+    quant_df2 <- quant_df[c(2,3,4),,drop = F]
+    colnames(quant_df2)[1] <- "Quantile"
+    
+    user_vline <- quantile(ssgsea_scores[,geneset_name],probs = user_quant)
+    
+    if (input$GeneSetTabs == 2) {
+      if (input$RawOrSS == "Raw Gene Expression") {
+        scoreMethodLab <- "Raw Gene Expression Density"
+      }
+      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        scoreMethodLab <- paste(scoreMethod, " Score Density", sep = "")
+      }
+    }
+    else if (input$GeneSetTabs != 2) {
+      scoreMethodLab <- paste(scoreMethod, " Score Density", sep = "")
+    }
+    
+    p <- ggplot(ssgsea_scores, aes(x=ssgsea_scores[,geneset_name])) + 
+      geom_density(color="darkblue", fill="lightblue", alpha = 0.4) +
+      xlab("ssGSEA Score") +
+      ylab(scoreMethodLab) +
+      ggtitle(paste(colnames(ssgsea_scores)[2],scoreMethodLab)) +
+      theme(axis.text = element_text(size = 14),
+            axis.title = element_text(size = 16),
+            plot.title = element_text(size = 20))
+    if (ShowQuartile == TRUE) {
+      p <- p + geom_vline(data = quant_df2, aes(xintercept = Quantile), linetype = "dashed", color = "darkblue", size = 1)
+    }
+    if (user_quant != 0) {
+      p <- p + geom_vline(xintercept = user_vline, linetype = "dashed", color = "darkred", size = 1)
+    }
+    p
+    
+  })
+  
+  output$ssgseaDensity <- renderPlot({
+    
+    p <- ssgseaDensity_react()
+    p
+    
+    
+  })
+  
   ####----Text Output----####
   
   output$timewarnmessage1 <- renderUI({
@@ -4503,6 +5573,606 @@ server <- function(input, output, session) {
   
   
   ####----Downloaders----####
+  
+  ## quartile
+  output$dnldSplot_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- Splot_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldSplot_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuartileSurvival.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- SplotBIN_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## binary
+  output$dnldSplotBIN_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_HiLoPscoreSurvival.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_HiLoPscoreSurvival.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- SplotBIN_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldSplotBIN_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_HiLoPscoreSurvival.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_HiLoPscoreSurvival.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- Splot_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## Quantile
+  output$dnldSquantPlot_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- SquantPlot_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldSquantPlot_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_QuantileSurvival.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- SquantPlot_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## cutoff
+  output$dnldSquantPlot2_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- SquantPlot2_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldSquantPlot2_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_AboveBelowCutoffSurvival.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- SquantPlot2_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## univariate
+  output$dnldfeatSplot_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      Feature1 <- input$SingleSurvivalFeature
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- featSplot_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldfeatSplot_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      Feature1 <- input$SingleSurvivalFeature
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,"_",geneset_name,"_",scoreMethodLab,"_UnivariateSurvival.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- featSplot_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  ##bivariate
+  output$dnldfeatSplotBi_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      Feature1 <- input$SurvivalFeatureBi1Inter
+      Feature2 <- input$SurvivalFeatureBi2Inter
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- featSplotBi_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldfeatSplotBi_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      Feature1 <- input$SurvivalFeatureBi1Inter
+      Feature2 <- input$SurvivalFeatureBi2Inter
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,Feature1,Feature2,"_",geneset_name,"_",scoreMethodLab,"_BivariateSurvival.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- featSplotBi_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldssgseaDensity_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      SampleType <- input$SampleTypeSelection
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+    }
+  )
+  
+  output$dnldssgseaDensity_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      SampleType <- input$SampleTypeSelection
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        scoreMethodLab <- scoreMethod
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_DensityPlot.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ssgseaDensity_react()
+      ggsave(file,p,width = 10, height = 8)
+    }
+  )
+  
+  output$dnldssgseaDensityTable <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      SampleType <- input$SampleTypeSelection
+      Feature <- input$FeatureSelection
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_ssGSEAscore.txt",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_ssGSEAscore.txt",sep = "")
+      }
+    },
+    content = function(file) {
+      geneset <- gs_react()
+      GeneSet <- names(geneset)
+      ssgsea_meta <- ssGSEAmeta()
+      table <- ssgsea_meta[,c("SampleName",GeneSet)]
+      write_delim(table,file,delim = '\t')
+    }
+  )
   
   ## Download handler for meta
   output$dnldMeta <- downloadHandler(
