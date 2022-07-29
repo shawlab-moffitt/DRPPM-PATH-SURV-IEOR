@@ -22,16 +22,16 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 ProjectName <- "Pan ICI Checkpoint Atlas"
 
-ExpressionMatrix_file <- "Pan_ICI_iAtlas_ExpressionMatrix.zip"
+ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_ExpressionMatrix.zip"
 
-MetaData_file <- "Pan_ICI_iAtlas_MetaData.txt"
+MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData.txt"
 
-MetaParam_File <- "Pan_ICI_iAtlas_MetaData_Params.txt"
+MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
 
-GeneSet_File <- "GeneSet_List_HS_v3.RData"
+GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v3.RData"
 
 # DO NOT CHANGE when using provided gene set data - only adjust file path if needed
-GeneSetTable_File <- "GeneSet_CatTable_v3.zip"
+GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v3.zip"
 
 
 
