@@ -10,7 +10,7 @@ if (any(installed_packages == FALSE)) {
 }
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
-bioCpacks <- c("GSVA")
+bioCpacks <- c("GSVA","clusterProfiler")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
 if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
