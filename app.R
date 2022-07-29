@@ -45,6 +45,7 @@ meta <- as.data.frame(read_delim(MetaData_file,delim = '\t', col_names = T))
 
 ##--Meta Param--##
 MetaParam <- as.data.frame(read_delim(MetaParam_File,delim = '\t',col_names = F))
+MetaParam[,2] <- gsub(" ","",MetaParam[,2])
 ## Subset meta columns by category
 metacol_samplenames <- MetaParam[which(MetaParam[,2] == "SampleName"),1]
 metacol_feature <- MetaParam[which(MetaParam[,2] == "Feature"),1]
