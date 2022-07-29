@@ -1,4 +1,4 @@
-1. To obtain the example expression matrix for the Pan ICI Checkpoint Atlas data please go to this link: http://shawlab.science/shiny/DRPPM_SURVIVE/Pan_ICI_iAtlas_ExpressionMatrix.zip
+1. To obtain the example expression matrix for the Pan ICI Checkpoint Atlas data please go to this link: http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip
 
 2. The link will being the download of the 157MB file. 
 
