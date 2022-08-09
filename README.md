@@ -8,7 +8,7 @@ Here we focus on the Interactive mode of this workflow with the DRPPM-PATH-SURVE
 
 To facilitate identifying significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking script which ranks pathways or genes based on ssGSEA score or raw gene expression, respectively, above and below the median which returns a comprehensive table of pathways or genes ranked by Hazard Ratio which allows the user to find high-risk features with ease. When these are identified, the user can return to the interactive R Shiny App and visualize these features in real-time and perform additional bivariate or multivariate analyses to observe how the pathway survival interacts with covariates. More information on this pipeline can be found in our GitHub repository here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline.
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/FlowChart_InteractiveMode.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/FlowChart_InteractiveMode.png?raw=true)
 
 # Installation
 
