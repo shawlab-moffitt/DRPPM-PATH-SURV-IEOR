@@ -14,7 +14,7 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 ## Via Download
 
-1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/archive/refs/heads/main.zip) from this GitHub repository: [https://github.com/shawlab-moffitt/DRPPM-SURVIVE](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR)
+1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR
 2. Unzip the downloaded file into the folder of your choice.
 3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
 4. Set your working directory in R to the local version of the repository
@@ -95,16 +95,16 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 * **Gene Set File (.RData/.gmt/.tsv/.txt):**
   * This is the file that contains the gene set names and genes for each gene set.
   * This file is provided but can be replaced for a file of the users choice.
-  * An .RData list is the preferred format which is a named list of gene sets and genes. A script to generate this list is provided here: [GeneSetRDataListGen.R](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSetRDataListGen.R)
+  * An .RData list is the preferred format which is a named list of gene sets and genes. A script to generate this list is provided here: [GeneSetRDataListGen.R](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSetRDataListGen.R)
     * The app also accepts gene sets in .gmt format or two-column tab-delimited .tsv/.txt format with the first column being the gene set name repeating for every gene symbol that would be placed in the second column. If either of these three formats are given athe app with automatically convert them to an RData list.
-  * The RData list provided ([GeneSet_List_HS.RData](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/DRPPM-PATH-SURVEIOR/GeneSet_Data/GeneSet_List_HS.RData)) contains over 94K gene sets from MSigDB, LINCS L1000 Cell Perturbations, and Cell Marker databases.
+  * The RData list provided ([GeneSet_List_HS.RData](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS_v4.RData)) contains over 95K gene sets from MSigDB, LINCS L1000 Cell Perturbations, Cell Marker, and ER Stress Clue.io databases.
  
 * **Gene Set Master Table (Optional):**
   * This is a optional three-column tab-delimited table the catagorizes and subcatagorizes the gene sets of the provided [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS.RData)
   * It allows for organization of the large gene set list in the UI of the gene set selection for the Shiny App.
   * If not provided or using a user-provided gene set file, the gene set selection table only contains the gene set names.
-  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable.tsv)
-      * The relative path to this file, within the app.R script (line 105), is through the GeneSet_Data folder. Please keep this in mind if using the master table and moving it around locally.
+  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable_v4.zip)
+      * The relative path to this file, within the app.R script, is through the GeneSet_Data folder. Please keep this in mind if using the master table and moving it around locally.
 
 # App Set-Up
 
@@ -112,8 +112,8 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 * When using your own files, please ensure all the required files above are provided.
   * The user must provide an expression matrix, meta data, and mata date parameter file.
   * The user may use the comprehensive [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS.RData) or they may provide their own file of gene sets according to the format described in the [Required Files Section](https://github.com/shawlab-moffitt/DRPPM-SURVIVE#required-files)
-    * If using the provided GeneSet List, it is recommended to also have the [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable.tsv) in the GeneSet_Data folder.
-* The desired project name and the path to the user input files should be entered in their respective fields on lines 23-31 of the app.R script
+    * If using the provided GeneSet List, it is recommended to also have the [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable_v4.zip) in the GeneSet_Data folder.
+* The desired project name and the path to the user input files should be entered in their respective fields in the app.R script
 * When these files are entered the user may run the App by pressing the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file
 
 # App Features
