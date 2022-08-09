@@ -6,7 +6,7 @@ The integration of patient genome expression data, phenotypye data, and clinical
 
 To facilitate finding significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking pipeline based on ssGSEA scores above and below the median. This pipeline returns a comprehensive table of pathways ranked by Hazard Ratio which allows the user to find high-risk pathways with ease. More information on this pipeline can be found in our GitHub repository [here](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVIOER-Pipeline). 
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/EASY_survieor_flow.PNG?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/FlowChart_InteractiveMode.png?raw=true)
 
 # Installation
 
