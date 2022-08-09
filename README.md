@@ -14,7 +14,7 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 ## Via Download
 
-1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/DRPPM-SURVIVE
+1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/archive/refs/heads/main.zip) from this GitHub repository: [https://github.com/shawlab-moffitt/DRPPM-SURVIVE](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR)
 2. Unzip the downloaded file into the folder of your choice.
 3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
 4. Set your working directory in R to the local version of the repository
@@ -23,7 +23,7 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 ## Via Git Clone
 
-1. Clone the [GitHub Repository](https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git) into the destination of your choice.
+1. Clone the [GitHub Repository](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR.git) into the destination of your choice.
    * Can be done in R Studio Terminal or a terminal of your choice
 ```bash
 git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
@@ -64,7 +64,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * Optional Column
     * A sample type column that allows for an initial subsetting of samples followed by grouping by feature (ex. Tissue or Disease Type)
     * Description column(s) that give additional information on the samples
-  * An example file can be found here: [Pan_ICI_iAtlas_MetaData.txt](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData.txt)
+  * An example file can be found here: [Pan_ICI_iAtlas_MetaData.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData.txt)
 
 * **Meta Data Parameters (.tsv/.txt):**
   * This should be a two-column tab-delimited file with the first column containing the column names of the meta file and the second column containing the column type of that meta column
@@ -77,7 +77,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
     * **SurvivalID:** Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
     * **Feature:** Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
     * **Description:** Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
-  * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt)
+  * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt)
 
 |  |  |
 | --- | --- |
@@ -97,22 +97,22 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * This file is provided but can be replaced for a file of the users choice.
   * An .RData list is the preferred format which is a named list of gene sets and genes. A script to generate this list is provided here: [GeneSetRDataListGen.R](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSetRDataListGen.R)
     * The app also accepts gene sets in .gmt format or two-column tab-delimited .tsv/.txt format with the first column being the gene set name repeating for every gene symbol that would be placed in the second column. If either of these three formats are given athe app with automatically convert them to an RData list.
-  * The RData list provided ([GeneSet_List_HS.RData](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/SurvivalAnalysis_ExampleApp/GeneSet_Data/GeneSet_List_HS.RData)) contains over 94K gene sets from MSigDB, LINCS L1000 Cell Perturbations, and Cell Marker databases.
+  * The RData list provided ([GeneSet_List_HS.RData](https://github.com/shawlab-moffitt/Survival_Analysis_Shiny_App/blob/main/DRPPM-PATH-SURVEIOR/GeneSet_Data/GeneSet_List_HS.RData)) contains over 94K gene sets from MSigDB, LINCS L1000 Cell Perturbations, and Cell Marker databases.
  
 * **Gene Set Master Table (Optional):**
-  * This is a optional three-column tab-delimited table the catagorizes and subcatagorizes the gene sets of the provided [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_List_HS.RData)
+  * This is a optional three-column tab-delimited table the catagorizes and subcatagorizes the gene sets of the provided [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS.RData)
   * It allows for organization of the large gene set list in the UI of the gene set selection for the Shiny App.
   * If not provided or using a user-provided gene set file, the gene set selection table only contains the gene set names.
-  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_CatTable.tsv)
+  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable.tsv)
       * The relative path to this file, within the app.R script (line 105), is through the GeneSet_Data folder. Please keep this in mind if using the master table and moving it around locally.
 
 # App Set-Up
 
-* When using the DRPPM_SURVIVE App with the Pan ICI Checkpoint example data, you may follow the [Installation Section](https://github.com/shawlab-moffitt/DRPPM-SURVIVE#installation) of the README and may press the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file.
+* When using the DRPPM_SURVIVE App with the Pan ICI Checkpoint example data, you may follow the [Installation Section](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR#installation) of the README and may press the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file.
 * When using your own files, please ensure all the required files above are provided.
   * The user must provide an expression matrix, meta data, and mata date parameter file.
-  * The user may use the comprehensive [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_List_HS.RData) or they may provide their own file of gene sets according to the format described in the [Required Files Section](https://github.com/shawlab-moffitt/DRPPM-SURVIVE#required-files)
-    * If using the provided GeneSet List, it is recommended to also have the [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/GeneSet_Data/GeneSet_CatTable.tsv) in the GeneSet_Data folder.
+  * The user may use the comprehensive [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS.RData) or they may provide their own file of gene sets according to the format described in the [Required Files Section](https://github.com/shawlab-moffitt/DRPPM-SURVIVE#required-files)
+    * If using the provided GeneSet List, it is recommended to also have the [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable.tsv) in the GeneSet_Data folder.
 * The desired project name and the path to the user input files should be entered in their respective fields on lines 23-31 of the app.R script
 * When these files are entered the user may run the App by pressing the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file
 
@@ -122,7 +122,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Sample Selection and Parameters
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/SideBar_SampleParameters.png?raw=true)
 
 1. Sample Type selection is an optional parameter that will appear if the user has a SampleType column to subset their data by. 
    * The user can select a single sample type to analyze or select all sample types
@@ -138,7 +138,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Survival Parameters
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/SideBar_SurvivalParameters.png?raw=true)
 
 1. The user may select to view a specific type of survival analysis based on the available survival types in the meta data provided. 
    * For exmaple, OS, EFS, or PFS amoung others
@@ -148,7 +148,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Figure Parameters
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/SideBar_FigureParamaters.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/SideBar_FigureParamaters.png?raw=true)
 
 1. The limit on years for the survival plots may be adjusted
 2. The user may adjust the font and dot size, as well as the text orientation and stat comparison method for the boxplots within the app
@@ -162,7 +162,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Survival Analysis of Pathway Activity
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_SurvivalPlot.png?raw=true)
 
 1. The Quartile Survival Plot shows at the top with a descriptive title indicating the feature, gene set, and score method
 2. Each plot on the screen allows for the display of a hazard ratio table by selecting the checkbox
@@ -171,7 +171,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Univariate Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Univar_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_Univar_Survival.png?raw=true)
 
 1. The user may view survival outcome based on a selected feature from the meta data
 2. If the feature chosen is continuous, please check the box so the proper Cox Proportional Hazard analysis is performed
@@ -180,7 +180,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Bivariate Additive Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_BivarAdd_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_BivarAdd_Survival.png?raw=true)
 
 1. Two features may be selected to view an additive Coxh survival analyis
 2. If either feature is continuous the box should be checked
@@ -190,7 +190,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Bivariate Interaction Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Bivar_Inter_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_Bivar_Inter_Survival.png?raw=true)
 
 1. Two features may be selected to view an additive Coxh survival analyis
 2. If either feature is continuous the box should be checked
@@ -199,7 +199,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Multivariate Survival Analysis
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Multivar_Survival.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_Multivar_Survival.png?raw=true)
 
 1. The user may select multiple features to perform a Cox Proportion Hazard regression analysis on
    * If too many features are added the model may become convoluted
@@ -208,7 +208,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Meta Data Exploration
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_MetaTable.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_MetaTable.png?raw=true)
 
 1. The user may select columns from the cumulative meta data to view in the UI table.
    * The table appears standard with the survival time, status, and current feature of interest
@@ -217,7 +217,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### ssGSEA Score Density
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_ssGSEA_Density.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_ssGSEA_Density.png?raw=true)
 
 1. The user may define a percentile to view as a red vertical line on the ssGSEA score density plot
    * The plot originates with three blue dashed lines representing the 25, 50, and 75 percentile. This can be turned off through the check box below
@@ -227,7 +227,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Risk Stratification Box Plot
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_BoxPlot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_BoxPlot.png?raw=true)
 
 1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
 2. A Survival Boxplot is generated based on the sample and feature parameters selected with the title indicating the gene set, score method, and feature
@@ -236,7 +236,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Risk Stratification Heatmap
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_Heatmap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_RiskStrat_Heatmap.png?raw=true)
 
 1. Survival parameters may be set in the side panel to bin the samples into two groups based on a user specified survival time and event status
    * The Survival Heatmap is generated with the same Survival Parameters as the Survival Boxplot with the cutoff indication in the annotation at the top of the heatmap
@@ -247,7 +247,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Feature Box Plot
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Feature_Boxplot.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_Feature_Boxplot.png?raw=true)
 
 1. A feature may be selected to view amoung the samples that have been already subset by sample type, feature and feature condition
    * The boxplot title will indicate the gene set, score method, feature, and the additional feature being observed
@@ -256,7 +256,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 
 ### Feature Heatmap
 
-![alt text](https://github.com/shawlab-moffitt/DRPPM-SURVIVE/blob/main/App_Demo_Pictures/MainPanel_Feature_Heatmap.png?raw=true)
+![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/MainPanel_Feature_Heatmap.png?raw=true)
 
 1. The Feature Heatmap is similar to the Feature Boxplot described above, where you may select an additional feature to view amoung you previously subset samples
 2. The feature grouping is indicated and annotated at the top of the heatmap
