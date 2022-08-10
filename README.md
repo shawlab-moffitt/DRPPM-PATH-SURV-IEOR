@@ -6,9 +6,16 @@ The integration of patient genome expression data, phenotypye data, and clinical
 
 Here we focus on the Interactive mode of this workflow with the DRPPM-PATH-SURVEIOR R Shiny App. With the expression, phenotype, and clincial data provided by the user we can integrate singe sample GSEA pathway analysis with the comprehensive list of gene set pathways provided (or user provided) and view a variety of survival plots based on binning the survival outcome data into quartile, quantile, and above/below median or look through the lense of univariate, bivariate, and multivariate analysis with the integration of additional phenotype and clincal patient data. Further data exploration is available within the app to observe ssGSEA score density across the cohort as well as box plots and heatmaps to examine risk and feature stratification. The Shiny app comes complete with the ability to subset your cohort of patients, upload your own gene set data, along with customization and download of plots and tables throughout the app. An example of this app using the Pan ICI Checkpoint Atlas data can be found here: http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/
 
+An example app using the PAN ICI iAtlas Checkpoint data can be see here: http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_Survival_App/ and is free to explore. This is the app that would be set up with the test data provided in this GitHub.
+
 To facilitate identifying significant genes and pathways for further analysis, we have developed a Cox Proportional Hazard ranking script which ranks pathways or genes based on ssGSEA score or raw gene expression, respectively, above and below the median which returns a comprehensive table of pathways or genes ranked by Hazard Ratio which allows the user to find high-risk features with ease. When these are identified, the user can return to the interactive R Shiny App and visualize these features in real-time and perform additional bivariate or multivariate analyses to observe how the pathway survival interacts with covariates. More information on this pipeline can be found in our GitHub repository here: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline.
 
-An example app using the PAN ICI iAtlas Checkpoint data can be see here: http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_Survival_App/ and is free to explore. This is the app that would be set up with the test data provided in this GitHub.
+## The DRPPM-PATH-SURVEIOR Family
+
+* R Shiny Base Survival App [Interactive Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR
+* R Script for Cox Proportional Hazards Ranking [Pipeline Mode]: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline
+* R Shiny Jaccard Connectivity App: https://github.com/shawlab-moffitt/DRPPM-Jaccard-Pathway-Connectivity
+* R Shiny Pre-Ranked GSEA App: https://github.com/shawlab-moffitt/DRPPM-PreRanked-GSEA
 
 ![alt text](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/App_Demo_Pictures/FlowChart_InteractiveMode.png?raw=true)
 
