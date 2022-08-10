@@ -16,7 +16,7 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR
 2. Unzip the downloaded file into the folder of your choice.
-3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
+3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_Skin_Survival_App/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
 4. Set your working directory in R to the local version of the repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
@@ -28,7 +28,7 @@ To facilitate identifying significant genes and pathways for further analysis, w
 ```bash
 git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 ```
-2. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the cloned repository.
+2. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_Skin_Survival_App/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the cloned repository.
 3. Set your working directory in R to the cloned repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
@@ -53,7 +53,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * Must be tab delimited with gene names as symbols located in the first column with subsequent columns consiting of the sample name as the header and expression data down the column.
   *  The App expects lowly expressed genes filtered out and normalized data either to FPKM or TMM.
      * Larger files might inflict memory issues for you local computer.
-  *  An example file can be found via this [link](http://shawlab.science/shiny/DRPPM_SURVIVE_Pan_ICI_CheckpointAtlas_Example/Pan_ICI_iAtlas_ExpressionMatrix.zip) due to the size being too large to store in the github repository (157MB zipped). 
+  *  An example file can be found via this [link](http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_Skin_Survival_App/Pan_ICI_iAtlas_ExpressionMatrix.zip) due to the size being too large to store in the github repository (157MB zipped). 
 
 * **Meta Data (.tsv/.txt):**
   * This should be a tab delimited file with each row depicting a sample by the same name as in the expression matrix followed by informative columns containing survival data and other features to analyze the samples by.
