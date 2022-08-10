@@ -126,15 +126,15 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
     * If there is a SampleType column in the meta, the user may select a variable from that column and write it in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
     * If "all" (case ignored) the pre-selected option will be "All_Sample_Types"
-  * Feature choice with "PreSelec_Feature"
+  * Feature choice with "PreSelect_Feature"
     * Feature options come from feature columns in the meta data, the user would write the column name in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
     * If "all" (case ignored) the pre-selected option will be "All_Features"
-  * Sub-Feature Choice with "PreSelec_SubFeature" 
+  * Sub-Feature Choice with "PreSelect_SubFeature" 
     * This is only used when a Feature is pre-selected
     * SubFeature options come from unique values of the feature column that is pre-selected from the meta data, this would be writen in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
-  * Secondary Feature with "PreSelec_SecondaryFeature"
+  * Secondary Feature with "PreSelect_SecondaryFeature"
     * This is the feature that is used with univariate and multivariate analyses
     * Feature options come from feature columns in the meta data, the user would write the column name in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
@@ -144,10 +144,10 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 ## Pre-Selected Inputs
 # An option from the meta, All, or NULL
 PreSelect_SamplyType <- NULL
-PreSelec_Feature <- "All"
+PreSelect_Feature <- "All"
 # An option from the meta or NULL
-PreSelec_SubFeature <- NULL
-PreSelec_SecondaryFeature <- NULL
+PreSelect_SubFeature <- NULL
+PreSelect_SecondaryFeature <- NULL
 ```
 
 # App Features
