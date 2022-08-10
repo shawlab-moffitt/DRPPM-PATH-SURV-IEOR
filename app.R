@@ -10,7 +10,7 @@ if (any(installed_packages == FALSE)) {
 }
 invisible(lapply(packages, library, character.only = TRUE))
 #bioconductor packages
-bioCpacks <- c("GSVA","clusterProfiler")
+bioCpacks <- c("GSVA")
 installed_packages_BIOC <- bioCpacks %in% rownames(installed.packages())
 if (any(installed_packages_BIOC == FALSE)) {
   BiocManager::install(bioCpacks[!installed_packages_BIOC], ask = F)
@@ -34,7 +34,13 @@ GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v4.RData"
 GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v4.zip"
 
 
-
+## Pre-Selected Inputs
+# An option from the meta, All, or NULL
+PreSelect_SamplyType <- NULL
+PreSelec_Feature <- "All"
+# An option from the meta or NULL
+PreSelec_SubFeature <- NULL
+PreSelec_SecondaryFeature <- "Responder"
 
 
 
@@ -115,13 +121,7 @@ if (exists("GeneSetTable_File") == FALSE) {
   
 }
 
-## Pre-Selected Inputs
-# An option from the meta, All, or NULL
-PreSelect_SamplyType <- NULL
-PreSelec_Feature <- NULL
-# An option from the meta or NULL
-PreSelec_SubFeature <- NULL
-PreSelec_SecondaryFeature <- NULL
+
 
 ## Pre-Selected Inputs
 # An option from the meta, All, or NULL
@@ -172,6 +172,7 @@ quantile_conversion2 = function(mat,cutoff) {
   return (new_mat)
 }
 
+
 ####----UI----####
 
 ui <-
@@ -205,7 +206,7 @@ ui <-
                                          ),
                                          tabPanel("Single Genes",
                                                   radioButtons("RawOrSS","Survival Analysis By:",
-                                                               choices = c("Raw Gene Expression","ssGSEA Rank Normalized"),
+                                                               choices = c("Raw Gene Expression","Rank Normalized"),
                                                                selected = "Raw Gene Expression", inline = T),
                                                   uiOutput("rendGeneGeneSetTable"),
                                                   value = 2
@@ -231,9 +232,6 @@ ui <-
                                        column(6,
                                               uiOutput("rendSurvivalType_id")
                                        ),
-                                       h3("User Cutoff Survival Plot Parameters"),
-                                       numericInput("QuantPercent","High/Low Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
-                                       numericInput("QuantPercent2","Above/Below Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                        h3("Risk Stratification Plot Parameters"),
                                        fluidRow(
                                          column(6,
@@ -351,6 +349,7 @@ ui <-
                                          hr()
                                        ),
                                        withSpinner(jqui_resizable(plotOutput("SquantPlot", width = "100%", height = "500px")), type = 6),
+                                       numericInput("QuantPercent","High/Low Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                        fluidRow(
                                          downloadButton("dnldSquantPlot_SVG","Download as SVG"),
                                          downloadButton("dnldSquantPlot_PDF","Download as PDF")
@@ -368,6 +367,7 @@ ui <-
                                          hr()
                                        ),
                                        withSpinner(jqui_resizable(plotOutput("SquantPlot2", width = "100%", height = "500px")), type = 6),
+                                       numericInput("QuantPercent2","Above/Below Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                        fluidRow(
                                          downloadButton("dnldSquantPlot2_SVG","Download as SVG"),
                                          downloadButton("dnldSquantPlot2_PDF","Download as PDF")
@@ -396,16 +396,16 @@ ui <-
                                                 fluidRow(
                                                   column(6,
                                                          checkboxInput("UniVarContCheck","Continuous Feature",value = F)
-                                                         ),
+                                                  ),
                                                   column(6,
                                                          checkboxInput("UniVarNAcheck","Remove NA/Unknown",value = T)
-                                                         )
+                                                  )
                                                 ),
                                                 uiOutput("rendSurvFeatVariableUni")
                                          ),
                                          column(8,
                                                 verbatimTextOutput("UnivarSummExpl")
-                                                )
+                                         )
                                        ),
                                        tabsetPanel(
                                          id = "UniVarPlots",
@@ -484,22 +484,22 @@ ui <-
                                                              )
                                                            ),
                                                            uiOutput("rendSurvFeatVariableBi1")
-                                                           ),
+                                                    ),
                                                     column(3,
                                                            uiOutput("rendSurvivalFeatureBi2"),
                                                            fluidRow(
                                                              column(6,
                                                                     checkboxInput("BiVarAddContCheck2","Continuous Feature",value = F)
-                                                                    ),
+                                                             ),
                                                              column(6,
                                                                     checkboxInput("BiVarAddNAcheck2","Remove NA/Unknown",value = T)
-                                                                    )
-                                                             ),
-                                                           uiOutput("rendSurvFeatVariableBi2")
+                                                             )
                                                            ),
+                                                           uiOutput("rendSurvFeatVariableBi2")
+                                                    ),
                                                     column(6,
                                                            verbatimTextOutput("BivarAddSummExpl")
-                                                           )
+                                                    )
                                                   ),
                                                   tabsetPanel(
                                                     id = "BiVarPlots",
@@ -563,11 +563,11 @@ ui <-
                                                            fluidRow(
                                                              column(6,
                                                                     checkboxInput("BiVarIntContCheck1","Continuous Feature",value = F)
-                                                                    ),
+                                                             ),
                                                              column(6,
                                                                     checkboxInput("BiVarIntNAcheck1","Remove NA/Unknown",value = T)
-                                                                    )
-                                                             ),
+                                                             )
+                                                           ),
                                                            uiOutput("rendSurvFeatVariableBi1Inter")
                                                     ),
                                                     column(3,
@@ -611,7 +611,7 @@ ui <-
                                                                column(6,
                                                                       verbatimTextOutput("bivarSummaryInter"),
                                                                       verbatimTextOutput("bivarAnovaInter1")
-                                                                      )
+                                                               )
                                                              )
                                                     ),
                                                     
@@ -749,6 +749,7 @@ ui <-
                       )
              )
   )
+
 
 
 ####----Server----####
@@ -1177,13 +1178,13 @@ server <- function(input, output, session) {
                   choices = Var_choices)
       
     }
-   
+    
   })
   
   output$rendSurvFeatVariableBi1 <- renderUI({
     
     if (input$BiVarAddContCheck1 == FALSE) {
-    
+      
       Feature <- input$SurvivalFeatureBi1
       metaSub <- ssGSEAmeta()
       Var_choices <- unique(metaSub[,Feature])
@@ -1915,7 +1916,7 @@ server <- function(input, output, session) {
       if (input$RawOrSS == "Raw Gene Expression") {
         scoreMethodLab <- "Raw Gene Expression"
       }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      else if (input$RawOrSS == "Rank Normalized") {
         scoreMethodLab <- paste(scoreMethod, " score", sep = "")
       }
     }
@@ -1951,7 +1952,7 @@ server <- function(input, output, session) {
       
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
-                           title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n", geneset_name," (",scoreMethod," score in quartiles)", sep = ""),
+                           title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n", geneset_name," (",scoreMethodLab," score in quartiles)", sep = ""),
                            xscale = c("d_y"),
                            break.time.by=365.25,
                            xlab = "Years", 
@@ -2026,7 +2027,7 @@ server <- function(input, output, session) {
       if (input$RawOrSS == "Raw Gene Expression") {
         scoreMethodLab <- "Raw Gene Expression"
       }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      else if (input$RawOrSS == "Rank Normalized") {
         scoreMethodLab <- paste(scoreMethod, " score", sep = "")
       }
     }
@@ -2064,7 +2065,7 @@ server <- function(input, output, session) {
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                            title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n",
-                                         geneset_name," (",scoreMethod, " Median Cutoff)", sep = ""),
+                                         geneset_name," (",scoreMethodLab, " Median Cutoff)", sep = ""),
                            xscale = c("d_y"),
                            break.time.by=365.25,
                            xlab = "Years", 
@@ -2149,7 +2150,7 @@ server <- function(input, output, session) {
       if (input$RawOrSS == "Raw Gene Expression") {
         scoreMethodLab <- "Raw Gene Expression"
       }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      else if (input$RawOrSS == "Rank Normalized") {
         scoreMethodLab <- paste(scoreMethod, " score", sep = "")
       }
     }
@@ -2187,7 +2188,7 @@ server <- function(input, output, session) {
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                            title = paste("Survival curves of ", Feature,SampleTypeLab,"\n",
-                                         geneset_name," (Top (Bottom) ",labelQuantCutoff," Patients Split based on ",scoreMethod," score)", sep = ""),
+                                         geneset_name," (Top (Bottom) ",labelQuantCutoff," Patients Split based on ",scoreMethodLab," score)", sep = ""),
                            xscale = c("d_y"),
                            break.time.by=365.25,
                            xlab = "Years", 
@@ -2270,7 +2271,7 @@ server <- function(input, output, session) {
       if (input$RawOrSS == "Raw Gene Expression") {
         scoreMethodLab <- "Raw Gene Expression"
       }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      else if (input$RawOrSS == "Rank Normalized") {
         scoreMethodLab <- paste(scoreMethod, " score", sep = "")
       }
     }
@@ -2308,7 +2309,7 @@ server <- function(input, output, session) {
       ## Generate plot
       ggsurv <- ggsurvplot(fit, data = meta_ssgsea_sdf, risk.table = TRUE,
                            title = paste("Survival curves of ", Feature,SampleTypeLab,"\n",
-                                         geneset_name," (Above (Below) ",labelQuantCutoff," Patients Split based on ",scoreMethod," score)", sep = ""),
+                                         geneset_name," (Above (Below) ",labelQuantCutoff," Patients Split based on ",scoreMethodLab," score)", sep = ""),
                            xscale = c("d_y"),
                            break.time.by=365.25,
                            xlab = "Years", 
@@ -5731,7 +5732,7 @@ server <- function(input, output, session) {
       }
     },
     content = function(file) {
-      p <- Splot_react()
+      p <- SplotBIN_react()
       ggsave(file,p$plot,width = 10, height = 8)
       
     }
@@ -6383,11 +6384,7 @@ server <- function(input, output, session) {
 }
 
 
-
-
-
-
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
 
 
