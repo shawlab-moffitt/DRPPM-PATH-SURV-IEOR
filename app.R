@@ -33,6 +33,7 @@ GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v4.RData"
 # DO NOT CHANGE when using provided gene set data - only adjust file path if needed
 GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v4.zip"
 
+##--Advanced Set-Up--##
 
 ## Pre-Selected Inputs
 # An option from the meta, All, or NULL
