@@ -42,7 +42,7 @@ PreSelect_SamplyType <- NULL
 PreSelect_Feature <- "All"
 # An option from the meta or NULL
 PreSelect_SubFeature <- NULL
-PreSelect_SecondaryFeature <- NULL
+PreSelect_SecondaryFeature <- "Sample_Treatment"
 
 
 
@@ -134,9 +134,9 @@ if (is.null(PreSelect_SamplyType) == FALSE) {
     PreSelect_SamplyType <- "All_Sample_Types"
   }
 }
-if (is.null(PreSelec_Feature) == FALSE) {
-  if (grepl("all",PreSelec_Feature, ignore.case = T) == TRUE) {
-    PreSelec_Feature <- "All_Features"
+if (is.null(PreSelect_Feature) == FALSE) {
+  if (grepl("all",PreSelect_Feature, ignore.case = T) == TRUE) {
+    PreSelect_Feature <- "All_Features"
   }
 }
 
@@ -454,7 +454,7 @@ ui <-
                                                                       white-space: nowrap;
                                                                   }
                                                                   .selectize-dropdown {
-                                                                      width: 500px !important;
+                                                                      width: 400px !important;
                                                                   }'
                                                   )
                                                   )
@@ -850,13 +850,13 @@ server <- function(input, output, session) {
       if (input$SampleTypeSelection == "All_Sample_Types") {
         
         FeatureChoices <- c(metacol_sampletype,metacol_feature,"All_Features")
-        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
+        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
         
       }
       else if (input$SampleTypeSelection != "All_Sample_Types") {
         
         FeatureChoices <- c(metacol_feature,"All_Features")
-        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
+        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
         
       }
       
@@ -864,7 +864,7 @@ server <- function(input, output, session) {
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
       FeatureChoices <- c(metacol_feature,"All_Features")
-      selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
+      selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
       
     }
     
@@ -896,7 +896,7 @@ server <- function(input, output, session) {
       SubFeatureChoices <- unique(meta[,Feature])
       # Sort options, will put 1,TRUE,yes before 0,FASLE,no, so the 'positive' value is the initial selected - puts NA last
       SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
-      selectInput("subFeatureSelection","Feature Condition:", choices = SubFeatureChoices, selected = PreSelec_SubFeature)
+      selectInput("subFeatureSelection","Feature Condition:", choices = SubFeatureChoices, selected = PreSelect_SubFeature)
       
     }
     
@@ -915,7 +915,7 @@ server <- function(input, output, session) {
         }
         metacol_feature <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
-                    choices = metacol_feature, selected = PreSelec_SecondaryFeature)
+                    choices = metacol_feature, selected = PreSelect_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -927,7 +927,7 @@ server <- function(input, output, session) {
         }
         SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
-                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
+                    choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
         
       }
     }
@@ -938,7 +938,7 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
       }
       selectInput("SingleSurvivalFeature","Select Feature:",
-                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
+                  choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
     }
     
   })
@@ -994,7 +994,7 @@ server <- function(input, output, session) {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                    choices = SurvFeatChoices, selected = PreSelec_SecondaryFeature)
+                    choices = SurvFeatChoices, selected = PreSelect_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -1003,7 +1003,7 @@ server <- function(input, output, session) {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
+                    choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
         
       }
     }
@@ -1012,7 +1012,7 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
       selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
+                  choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
     }
     
   })
@@ -1068,7 +1068,7 @@ server <- function(input, output, session) {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                    choices = SurvFeatChoices, selected = PreSelec_SecondaryFeature)
+                    choices = SurvFeatChoices, selected = PreSelect_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -1077,7 +1077,7 @@ server <- function(input, output, session) {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
+                    choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
         
       }
     }
@@ -1086,7 +1086,7 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
       selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
+                  choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
     }
     
   })
