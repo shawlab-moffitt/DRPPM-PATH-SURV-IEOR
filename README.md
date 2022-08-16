@@ -68,7 +68,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * This should be a tab delimited file with each row depicting a sample by the same name as in the expression matrix followed by informative columns containing survival data and other features to analyze the samples by.
   * Required columns:
     * A sample name column
-    * A survival time and ID column (can be more than one type of survival time)
+    * A survival time (in days) and ID column (can be more than one type of survival time)
     * Feature column(s) that allow for grouping of samples for analysis
   * Optional Column
     * A sample type column that allows for an initial subsetting of samples followed by grouping by feature (ex. Tissue or Disease Type)
@@ -82,7 +82,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * Column types and exmplinations:
     * **SampleName:** Contains sample names matching exprssion data (ONLY ONE ALLOWED)
     * **SampleType:** Contains a way to group and subset samples for further analysis (ONLY ONE ALLOWED and OPTIONAL)
-    * **SurvivalTime:** Contains the overall survival time for the samples (can be other types of survival)
+    * **SurvivalTime:** Contains the overall survival time in days for the samples (can be other types of survival)
     * **SurvivalID:** Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
     * **Feature:** Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
     * **Description:** Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
