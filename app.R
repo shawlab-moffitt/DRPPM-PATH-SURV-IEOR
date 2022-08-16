@@ -20,11 +20,11 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 ####----Input----####
 
-ProjectName <- "Pan ICI Checkpoint Atlas"
+ProjectName <- "Pan ICI Checkpoint Atlas - Skin"
 
-ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_ExpressionMatrix.zip"
+ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Expr_Skin.zip"
 
-MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData.txt"
+MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Meta_Skin.txt"
 
 MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
 
