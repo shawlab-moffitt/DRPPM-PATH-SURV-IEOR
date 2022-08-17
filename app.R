@@ -366,7 +366,7 @@ ui <-
                               
                               ####----Survival Analysis Tab----####
                               
-                              tabPanel("Pathway Survival Analysis",
+                              tabPanel("Pathway Level Survival Analysis",
                                        p(),
                                        withSpinner(jqui_resizable(plotOutput("Splot", width = "100%", height = "500px")), type = 6),
                                        fluidRow(
