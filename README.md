@@ -47,7 +47,6 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR
 2. Unzip the downloaded file into the folder of your choice.
-3. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://networkbiology.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpresionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip) or [here](http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpressionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the local version of the repository.
 4. Set your working directory in R to the local version of the repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
@@ -59,18 +58,17 @@ To facilitate identifying significant genes and pathways for further analysis, w
 ```bash
 git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 ```
-2. If using the example Pan ICI Checkpoint data, download the Expression matrix [here](http://networkbiology.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpresionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip) or [here](http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpressionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip) to the Pan_ICI_Example_Data folder of the cloned repository.
 3. Set your working directory in R to the cloned repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
 
-# Required Files
+# Required Files - User Provided
 
 * **Expression Matrix (.tsv/.txt):**
   * Must be tab delimited with gene names as symbols located in the first column with subsequent columns consiting of the sample name as the header and expression data down the column.
   *  The App expects lowly expressed genes filtered out and normalized data either to FPKM or TMM.
      * Larger files might inflict memory issues for you local computer.
-  *  An example file can be found via this [link](http://networkbiology.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpresionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip) or this [link](http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpressionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip) due to the size being too large to store in the github repository (157MB zipped). 
+  * An example file with data from the PAN ICI iAtlas study on Skin and Kidney cancer tissue is loacted here [Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip)
 
 * **Meta Data (.tsv/.txt):**
   * This should be a tab delimited file with each row depicting a sample by the same name as in the expression matrix followed by informative columns containing survival data and other features to analyze the samples by.
@@ -81,7 +79,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
   * Optional Column
     * A sample type column that allows for an initial subsetting of samples followed by grouping by feature (ex. Tissue or Disease Type)
     * Description column(s) that give additional information on the samples
-  * An example file can be found here: [Pan_ICI_iAtlas_MetaData.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData.txt)
+  * An example file with data from the PAN ICI iAtlas study on Skin and Kidney cancer tissue is loacted here [Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt)
 
 * **Meta Data Parameters (.tsv/.txt):**
   * This should be a two-column tab-delimited file with the first column containing the column names of the meta file and the second column containing the column type of that meta column
@@ -94,7 +92,7 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
     * **SurvivalID:** Contains the survival ID for the samples, should be in a 0/1 format, 0 for alive/no event or 1 for dead/event (can be other types of survival)
     * **Feature:** Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
     * **Description:** Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
-  * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt)
+  * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt)
 
 |  |  |
 | --- | --- |
@@ -109,29 +107,44 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 | Age | Description |
 | Center | Description |
 
-* **Gene Set File (.RData/.gmt/.tsv/.txt):**
+# Required Files - Provided
+
+**Please keep in mind the paths to these documents, as they are relative to the path on the Github page. If the Github folder is your working directory the script should find these files**
+
+* **Gene Set File:**
   * This is the file that contains the gene set names and genes for each gene set.
-  * This file is provided but can be replaced for a file of the users choice.
-  * An .RData list is the preferred format which is a named list of gene sets and genes. A script to generate this list is provided here: [GeneSetRDataListGen.R](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSetRDataListGen.R)
-    * The app also accepts gene sets in .gmt format or two-column tab-delimited .tsv/.txt format with the first column being the gene set name repeating for every gene symbol that would be placed in the second column. If either of these three formats are given athe app with automatically convert them to an RData list.
-  * The RData list provided ([GeneSet_List_HS.RData](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS_v4.RData)) contains over 95K gene sets from MSigDB, LINCS L1000 Cell Perturbations, Cell Marker, and ER Stress Clue.io databases.
+  * It is provided in RData list format
+  * This file ([GeneSet_Data/GeneSet_List.RData](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List.RData)) contains gene sets from the following resources:
+    * [The Molecular Signatures Database (MSigDB)](http://www.gsea-msigdb.org/gsea/msigdb/index.jsp)
+    * [LINCS L1000 Small Molecule Perturbations](https://lincsproject.org/LINCS/)
+    * [Cell Marker](https://academic.oup.com/nar/article/47/D1/D721/5115823)
+    * [ER Stress Signatures from Clue.io](https://clue.io/)
+    * Immunne Signatures
  
-* **Gene Set Master Table (Optional):**
-  * This is a optional three-column tab-delimited table the catagorizes and subcatagorizes the gene sets of the provided [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS.RData)
+* **Gene Set Master Table:**
+  * This is a three-column tab-delimited table the catagorizes and subcatagorizes the gene sets provided
   * It allows for organization of the large gene set list in the UI of the gene set selection for the Shiny App.
-  * If not provided or using a user-provided gene set file, the gene set selection table only contains the gene set names.
-  * The gene set master table that is provided can be found here: [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable_v4.zip)
-      * The relative path to this file, within the app.R script, is through the GeneSet_Data folder. Please keep this in mind if using the master table and moving it around locally.
+  * This file can be found here: [GeneSet_Data/GeneSet_Table.zip](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_Table.zip)
 
 # App Set-Up
 
-* When using the DRPPM_SURVIVE App with the Pan ICI Checkpoint example data, you may follow the [Installation Section](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR#installation) of the README and may press the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file.
-* When using your own files, please ensure all the required files above are provided.
-  * The user must provide an expression matrix, meta data, and mata date parameter file.
-  * The user may use the comprehensive [GeneSet_List_HS.RData file](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_List_HS.RData) or they may provide their own file of gene sets according to the format described in the [Required Files Section](https://github.com/shawlab-moffitt/DRPPM-SURVIVE#required-files)
-    * If using the provided GeneSet List, it is recommended to also have the [GeneSet_CatTable.tsv](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/GeneSet_Data/GeneSet_CatTable_v4.zip) in the GeneSet_Data folder.
-* The desired project name and the path to the user input files should be entered in their respective fields in the app.R script
+* When using the DRPPM_SURVIVE App with the Pan ICI Checkpoint example data, you may follow the [Installation Section](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR#installation) of the README and may press the 'Run App' button in R studio or use the `runApp()` function in your console with the path to the directory of the app.R file.
+* **When using your own files, please ensure all the required files above are in the proper directory**
+  * The user must provide an expression matrix, meta data, and mata data parameter file.
+* At the top of the app.R script you will find the user data input section where you input the path of your desired files (previewed below)
 * When these files are entered the user may run the App by pressing the 'Run App' button in R studio or use the `runApp()` function in your terminal with the path to the app.R file
+```{r}
+####----User Input----####
+
+ProjectName <- "Pan ICI Checkpoint Atlas"
+
+ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
+
+MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
+
+MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
+```
+
 
 ## Advanced Set-Up
 
