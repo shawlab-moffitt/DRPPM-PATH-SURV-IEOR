@@ -1,7 +1,0 @@
-1. To obtain the example expression matrix for the Pan ICI Checkpoint Atlas data please go to either of these links:
-http://networkbiology.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpresionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip
-http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_ExpressionData/www/Pan_ICI_iAtlas_ExpressionMatrix.zip
-
-2. The link will being the download of the 157MB file. 
-
-3. There is no need to unzip the file. The file name in the example app uses the zipped version.
