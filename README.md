@@ -150,19 +150,19 @@ MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
 
 * There is a section at the top of the app.R script to allow users to pre-select their sample selection to be loaded on app start up.
 * Users can select:
-  * Sample Type choice with **"PreSelect_SamplyType"**
+  * Sample Type choice with **PreSelect_SamplyType**
     * If there is a SampleType column in the meta, the user may select a variable from that column and write it in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
     * If "all" (case ignored) the pre-selected option will be "All_Sample_Types"
-  * Feature choice with **"PreSelect_Feature"**
+  * Feature choice with **PreSelect_Feature**
     * Feature options come from feature columns in the meta data, the user would write the column name in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
     * If "all" (case ignored) the pre-selected option will be "All_Features"
-  * Sub-Feature Choice with **"PreSelect_SubFeature"**
+  * Sub-Feature Choice with **PreSelect_SubFeature**
     * This is only used when a Feature is pre-selected
     * SubFeature options come from unique values of the feature column that is pre-selected from the meta data, this would be writen in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
-  * Secondary Feature with **"PreSelect_SecondaryFeature"**
+  * Secondary Feature with **PreSelect_SecondaryFeature**
     * This is the feature that is used with univariate and multivariate analyses
     * Feature options come from feature columns in the meta data, the user would write the column name in quotations
     * If NULL no choice will be pre-selected, the app will show the first option
