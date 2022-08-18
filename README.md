@@ -21,6 +21,12 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 # Installation
 
+## R Requirments
+
+* `R` - https://cran.r-project.org/src/base/R-4/
+   * R version >= 4.1 is recommended for use of the immune deconvolution R package
+* `R Studio` - https://www.rstudio.com/products/rstudio/download/
+
 ## R Dependencies
 
 |  |  |  |  |  |  |
@@ -36,12 +42,6 @@ To facilitate identifying significant genes and pathways for further analysis, w
   * This is also in the app.R script in case the user does not pre-install
 * **Please note the immunedeconv package requires R version >= 4.1 to install**
   * The user may use the app without the package installed and it will work, but without the immune deconvolution data
-
-### R Requirments
-
-* `R` - https://cran.r-project.org/src/base/R-4/
-   * R version >= 4.1 is recommended for use of the immune deconvolution R package
-* `R Studio` - https://www.rstudio.com/products/rstudio/download/
 
 ## Via Download
 
