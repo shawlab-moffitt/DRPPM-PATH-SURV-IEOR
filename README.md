@@ -26,9 +26,9 @@ To facilitate identifying significant genes and pathways for further analysis, w
 |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- |
 | shiny_1.7.1 | shinythemes_1.2.0 | shinyjqui_0.4.1 | shinycssloaders_1.0.0 | dplyr_1.0.9 | tidyr_1.1.3 |
-| readr_2.1.2 | gtsummary_1.6.0 | ggplot2_3.3.6 | pheatmap_1.0.12 | survival_3.2-11 | survminer_0.4.9 |
+| readr_2.1.2 | gtsummary_1.6.0 | ggplot2_3.3.6 | pheatmap_1.0.12 | viridis_0.6.2 | plotly_4.10.0 |
 | GSVA_1.40.1 | clusterProfiler_4.0.5 | ggpubr_0.4.0 | RColorBrewer_1.1-3 | tibble_3.1.7 | DT_0.23 |
-| gridExtra_2.3 | viridis_0.6.2 | plotly_4.10.0 | immunedeconv_2.1.0 |  |  |
+| gridExtra_2.3 | survival_3.2-11 | survminer_0.4.9 | immunedeconv_2.1.0 |  |  |
 
 * Above are the required packages for the R Shiny Application
 * Users are encouraged to pre-intall the packages for quicker initial start-up of the application
