@@ -1,6 +1,12 @@
 ####----Install and load packages----####
 
-packages <- c("shiny","shinythemes","shinyjqui","gtsummary","tidyr","RColorBrewer","immunedeconv",
+## Check if Immune deconvolution package is installed
+immudecon <- "immunedeconv"
+immudecon_check <- immudecon %in% rownames(installed.packages())
+if (immudecon_check == TRUE) {
+  library(immunedeconv)
+}
+packages <- c("shiny","shinythemes","shinyjqui","gtsummary","tidyr","RColorBrewer",
               "dplyr","DT","ggplot2","ggpubr","tibble","survival","pheatmap","stringr",
               "plotly","readr","shinycssloaders","survminer","gridExtra","viridis")
 
@@ -20,19 +26,14 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 ####----Input----####
 
-ProjectName <- "Pan ICI Checkpoint Atlas - Skin"
+ProjectName <- "Pan ICI Checkpoint Atlas"
 
-ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Expr_Skin.zip"
+ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_ExpressionMatrix.zip"
 
-MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Meta_Skin.txt"
+MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData.txt"
 
 MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
 
-
-
-# DO NOT CHANGE when using provided gene set data - only adjust file path if needed
-GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v4.RData"
-GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v4.zip"
 
 ##--Advanced Set-Up--##
 
@@ -42,7 +43,11 @@ PreSelect_SamplyType <- NULL
 PreSelect_Feature <- "All"
 # An option from the meta or NULL
 PreSelect_SubFeature <- NULL
-PreSelect_SecondaryFeature <- "Sample_Treatment"
+PreSelect_SecondaryFeature <- NULL
+
+# DO NOT CHANGE when using provided gene set data - only adjust file path if needed
+GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v4.RData"
+GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v4.zip"
 
 
 
@@ -134,9 +139,9 @@ if (is.null(PreSelect_SamplyType) == FALSE) {
     PreSelect_SamplyType <- "All_Sample_Types"
   }
 }
-if (is.null(PreSelect_Feature) == FALSE) {
-  if (grepl("all",PreSelect_Feature, ignore.case = T) == TRUE) {
-    PreSelect_Feature <- "All_Features"
+if (is.null(PreSelec_Feature) == FALSE) {
+  if (grepl("all",PreSelec_Feature, ignore.case = T) == TRUE) {
+    PreSelec_Feature <- "All_Features"
   }
 }
 
@@ -179,40 +184,64 @@ quantile_conversion2 = function(mat,cutoff) {
 
 ##--Perform Immune Deconvolution--##
 
-estimate_decon <- as.data.frame(deconvolute(expr, "estimate"))
-mcp_counter_decon <- as.data.frame(deconvolute(expr, "mcp_counter"))
-
-rownames(estimate_decon) <- estimate_decon[,1]
-rownames(mcp_counter_decon) <- mcp_counter_decon[,1]
-
-estimate_decon <- estimate_decon[,-1]
-mcp_counter_decon <- mcp_counter_decon[,-1]
-
-estimate_decon <- as.data.frame(t(estimate_decon))
-mcp_counter_decon <- as.data.frame(t(mcp_counter_decon))
-
-colnames(estimate_decon) <- paste(gsub(" ","_",colnames(estimate_decon)),"ESTIMATE",sep = "_")
-colnames(mcp_counter_decon) <- paste(gsub(" ","_",colnames(mcp_counter_decon)),"MCPcount",sep = "_")
-
-decon_cols <- c(colnames(estimate_decon),colnames(mcp_counter_decon))
-
-estimate_decon$SampleName <- rownames(estimate_decon)
-estimate_decon <- estimate_decon %>%
-  relocate(SampleName)
-mcp_counter_decon$SampleName <- rownames(mcp_counter_decon)
-mcp_counter_decon <- mcp_counter_decon %>%
-  relocate(SampleName)
-
-meta <- merge(meta,estimate_decon,by = "SampleName",all.x = T)
-meta <- merge(meta,mcp_counter_decon,by = "SampleName",all.x = T)
-
-for (i in decon_cols) {
-  new_colname <- paste(i,"_HiLoScore",sep = "")
-  meta[,paste(i,"_HiLoScore",sep = "")] <- highlow(meta[,which(colnames(meta) == i)])
-  decon_cols <- c(decon_cols,new_colname)
+if (immudecon_check == TRUE) {
+  
+  estimate_decon <- as.data.frame(deconvolute(expr, "estimate"))
+  mcp_counter_decon <- as.data.frame(deconvolute(expr, "mcp_counter"))
+  
+  rownames(estimate_decon) <- estimate_decon[,1]
+  rownames(mcp_counter_decon) <- mcp_counter_decon[,1]
+  
+  estimate_decon <- estimate_decon[,-1]
+  mcp_counter_decon <- mcp_counter_decon[,-1]
+  
+  estimate_decon <- as.data.frame(t(estimate_decon))
+  mcp_counter_decon <- as.data.frame(t(mcp_counter_decon))
+  
+  colnames(estimate_decon) <- paste(gsub(" ","_",colnames(estimate_decon)),"ESTIMATE",sep = "_")
+  colnames(mcp_counter_decon) <- paste(gsub(" ","_",colnames(mcp_counter_decon)),"MCPcount",sep = "_")
+  
+  decon_score_cols <- c(colnames(estimate_decon),colnames(mcp_counter_decon))
+  
+  ## Make Score label rows to add to gene set table
+  est_decon_gstab <- data.frame(GeneSet_Category = "Immune Deconvolution Gene Sets",
+                                GeneSet_Sub_Category = "ESTIMATE Deconvolution Method",
+                                GeneSet_Name = colnames(estimate_decon))
+  mcp_decon_gstab <- data.frame(GeneSet_Category = "Immune Deconvolution Gene Sets",
+                                GeneSet_Sub_Category = "MCP Counter Deconvolution Method",
+                                GeneSet_Name = colnames(mcp_counter_decon))
+  if (gsTab == TRUE) {
+    GeneSetTable <- rbind(GeneSetTable,est_decon_gstab,mcp_decon_gstab)
+  }
+  if (gsTab == FALSE) {
+    col_name <- colnames(GeneSetTable)[1]
+    est_decon_gstab2 <- est_decon_gstab[,3, drop = F]
+    colnames(est_decon_gstab2)[1] <- col_name
+    mcp_decon_gstab2 <- mcp_decon_gstab[,3, drop = F]
+    colnames(mcp_decon_gstab2)[1] <- col_name
+    GeneSetTable <- rbind(GeneSetTable,est_decon_gstab2,mcp_decon_gstab2)
+  }
+  
+  estimate_decon$SampleName <- rownames(estimate_decon)
+  estimate_decon <- estimate_decon %>%
+    relocate(SampleName)
+  mcp_counter_decon$SampleName <- rownames(mcp_counter_decon)
+  mcp_counter_decon <- mcp_counter_decon %>%
+    relocate(SampleName)
+  
+  meta <- merge(meta,estimate_decon,by = "SampleName",all.x = T)
+  meta <- merge(meta,mcp_counter_decon,by = "SampleName",all.x = T)
+  
+  decon_bin_cols <- c()
+  for (i in decon_score_cols) {
+    new_colname <- paste(i,"_HiLoScore",sep = "")
+    meta[,paste(i,"_HiLoScore",sep = "")] <- highlow(meta[,which(colnames(meta) == i)])
+    decon_bin_cols <- c(decon_bin_cols,new_colname)
+  }
+  
+  metacol_feature <- c(metacol_feature,decon_bin_cols,decon_score_cols)
+  
 }
-
-metacol_feature <- c(metacol_feature,decon_cols)
 
 
 ####----UI----####
@@ -454,7 +483,7 @@ ui <-
                                                                       white-space: nowrap;
                                                                   }
                                                                   .selectize-dropdown {
-                                                                      width: 400px !important;
+                                                                      width: 500px !important;
                                                                   }'
                                                   )
                                                   )
@@ -818,8 +847,6 @@ ui <-
 
 
 
-
-
 ####----Server----####
 
 
@@ -850,13 +877,13 @@ server <- function(input, output, session) {
       if (input$SampleTypeSelection == "All_Sample_Types") {
         
         FeatureChoices <- c(metacol_sampletype,metacol_feature,"All_Features")
-        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
+        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
         
       }
       else if (input$SampleTypeSelection != "All_Sample_Types") {
         
         FeatureChoices <- c(metacol_feature,"All_Features")
-        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
+        selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
         
       }
       
@@ -864,7 +891,7 @@ server <- function(input, output, session) {
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
       
       FeatureChoices <- c(metacol_feature,"All_Features")
-      selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelect_Feature)
+      selectInput("FeatureSelection","Select Feature:", choices = FeatureChoices, selected = PreSelec_Feature)
       
     }
     
@@ -896,7 +923,7 @@ server <- function(input, output, session) {
       SubFeatureChoices <- unique(meta[,Feature])
       # Sort options, will put 1,TRUE,yes before 0,FASLE,no, so the 'positive' value is the initial selected - puts NA last
       SubFeatureChoices <- sort(SubFeatureChoices, decreasing = T, na.last = T)
-      selectInput("subFeatureSelection","Feature Condition:", choices = SubFeatureChoices, selected = PreSelect_SubFeature)
+      selectInput("subFeatureSelection","Feature Condition:", choices = SubFeatureChoices, selected = PreSelec_SubFeature)
       
     }
     
@@ -915,7 +942,7 @@ server <- function(input, output, session) {
         }
         metacol_feature <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
-                    choices = metacol_feature, selected = PreSelect_SecondaryFeature)
+                    choices = metacol_feature, selected = PreSelec_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -927,7 +954,7 @@ server <- function(input, output, session) {
         }
         SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
-                    choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
+                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
         
       }
     }
@@ -938,7 +965,7 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
       }
       selectInput("SingleSurvivalFeature","Select Feature:",
-                  choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
+                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
     }
     
   })
@@ -994,7 +1021,7 @@ server <- function(input, output, session) {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                    choices = SurvFeatChoices, selected = PreSelect_SecondaryFeature)
+                    choices = SurvFeatChoices, selected = PreSelec_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -1003,7 +1030,7 @@ server <- function(input, output, session) {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                    choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
+                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
         
       }
     }
@@ -1012,7 +1039,7 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
       selectInput("SurvivalFeatureBi2","Select Feature 2:",
-                  choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
+                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
     }
     
   })
@@ -1068,7 +1095,7 @@ server <- function(input, output, session) {
           SurvFeatChoices <- SurvFeatChoices[-which(SurvFeatChoices == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                    choices = SurvFeatChoices, selected = PreSelect_SecondaryFeature)
+                    choices = SurvFeatChoices, selected = PreSelec_SecondaryFeature)
         
       }
       else if (input$SampleTypeSelection == "All_Sample_Types") {
@@ -1077,7 +1104,7 @@ server <- function(input, output, session) {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
         selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                    choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
+                    choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
         
       }
     }
@@ -1086,7 +1113,7 @@ server <- function(input, output, session) {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
       }
       selectInput("SurvivalFeatureBi2Inter","Select Feature 2:",
-                  choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
+                  choices = SurvFeatChoices2, selected = PreSelec_SecondaryFeature)
     }
     
   })
@@ -1725,10 +1752,24 @@ server <- function(input, output, session) {
     
     if (input$GeneSetTabs == 1) {
       if (gsTab == TRUE) {
-        geneset <- gs[(GeneSetTable[input$GeneSetTable_rows_selected,3])]
+        geneset_name <- GeneSetTable[input$GeneSetTable_rows_selected,3]
+        if (geneset_name %in% decon_score_cols) {
+          geneset <- list(meta[,geneset_name])
+          names(geneset) <- geneset_name
+        }
+        else {
+          geneset <- gs[geneset_name]
+        }
       }
       if (gsTab == FALSE) {
-        geneset <- gs[(GeneSetTable[input$GeneSetTable_rows_selected,1])]
+        geneset_name <- GeneSetTable[input$GeneSetTable_rows_selected,1]
+        if (geneset_name %in% decon_score_cols) {
+          geneset <- list(meta[,geneset_name])
+          names(geneset) <- geneset_name
+        }
+        else {
+          geneset <- gs[geneset_name]
+        }
       }
     }
     if (input$GeneSetTabs == 2) {
@@ -1816,27 +1857,14 @@ server <- function(input, output, session) {
     rownames(expr_mat) <- rownames(expr_sub)
     colnames(expr_mat) <- colnames(expr_sub)
     
-    if (input$GeneSetTabs == 1 | input$GeneSetTabs == 3) {
+    if (geneset_name %in% decon_score_cols) {
       
-      ## Perform ssGSEA with gs and new subset data
-      scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
-      ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
-      ## Transform
-      ssGSEA <- as.data.frame(t(ssGSEA))
-      ssGSEA$SampleName <- rownames(ssGSEA)
+      ssGSEA <- meta[,c("SampleName",geneset_name)]
       
     }
-    else if (input$GeneSetTabs == 2) {
+    else if ((geneset_name %in% decon_score_cols) == FALSE) {
       
-      if (input$RawOrSS == "Raw Gene Expression") {
-        
-        expr_sub2 <- expr_sub[geneset_name,]
-        expr_sub3 <- as.data.frame(t(expr_sub2))
-        expr_sub3$SampleName <- rownames(expr_sub3)
-        ssGSEA <- expr_sub3
-        
-      }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      if (input$GeneSetTabs == 1 | input$GeneSetTabs == 3) {
         
         ## Perform ssGSEA with gs and new subset data
         scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
@@ -1846,9 +1874,30 @@ server <- function(input, output, session) {
         ssGSEA$SampleName <- rownames(ssGSEA)
         
       }
+      else if (input$GeneSetTabs == 2) {
+        
+        if (input$RawOrSS == "Raw Gene Expression") {
+          
+          expr_sub2 <- expr_sub[geneset_name,]
+          expr_sub3 <- as.data.frame(t(expr_sub2))
+          expr_sub3$SampleName <- rownames(expr_sub3)
+          ssGSEA <- expr_sub3
+          
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          
+          ## Perform ssGSEA with gs and new subset data
+          scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
+          ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
+          ## Transform
+          ssGSEA <- as.data.frame(t(ssGSEA))
+          ssGSEA$SampleName <- rownames(ssGSEA)
+          
+        }
+        
+      }
       
     }
-    
     
     ## Perform further functions
     ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
@@ -1858,6 +1907,9 @@ server <- function(input, output, session) {
     ssGSEA$AboveBelowCutoffPScore <- quantile_conversion2(ssGSEA[, which(colnames(ssGSEA) == geneset_name)], quantCutoff2)
     
     ## Merge with meta
+    if (geneset_name %in% decon_score_cols) {
+      ssGSEA <- ssGSEA[,-2] #remove score column so on merge the column does not duplicate
+    }
     meta_ssGSEA <- merge(meta,ssGSEA, by = "SampleName", all = T)
     meta_ssGSEA
     
@@ -6338,6 +6390,7 @@ server <- function(input, output, session) {
 
 # Run the application
 shinyApp(ui = ui, server = server)
+
 
 
 
