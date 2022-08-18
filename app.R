@@ -1,3 +1,34 @@
+
+
+
+####----User Input----####
+
+ProjectName <- "Pan ICI Checkpoint Atlas"
+
+ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
+
+MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
+
+MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
+
+
+##--Advanced Set-Up--##
+
+## Pre-Selected Inputs
+# An option from the meta, All, or NULL
+PreSelect_SamplyType <- NULL
+PreSelect_Feature <- "All"
+# An option from the meta or NULL
+PreSelect_SubFeature <- NULL
+PreSelect_SecondaryFeature <- NULL
+
+# DO NOT CHANGE when using provided gene set data - only adjust file path if needed
+GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v4.RData"
+GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v4.zip"
+
+
+
+
 ####----Install and load packages----####
 
 ## Check if Immune deconvolution package is installed
@@ -23,31 +54,6 @@ if (any(installed_packages_BIOC == FALSE)) {
 }
 invisible(lapply(bioCpacks, library, character.only = TRUE))
 
-
-####----Input----####
-
-ProjectName <- "Pan ICI Checkpoint Atlas"
-
-ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
-
-MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
-
-MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
-
-
-##--Advanced Set-Up--##
-
-## Pre-Selected Inputs
-# An option from the meta, All, or NULL
-PreSelect_SamplyType <- NULL
-PreSelect_Feature <- "All"
-# An option from the meta or NULL
-PreSelect_SubFeature <- NULL
-PreSelect_SecondaryFeature <- NULL
-
-# DO NOT CHANGE when using provided gene set data - only adjust file path if needed
-GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v4.RData"
-GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v4.zip"
 
 
 
