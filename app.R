@@ -23,8 +23,8 @@ PreSelect_SubFeature <- NULL
 PreSelect_SecondaryFeature <- NULL
 
 # DO NOT CHANGE when using provided gene set data - only adjust file path if needed
-GeneSet_File <- "GeneSet_Data/GeneSet_List_HS_v4.RData"
-GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable_v4.zip"
+GeneSet_File <- "GeneSet_Data/GeneSet_List.RData"
+GeneSetTable_File <- "GeneSet_Data/GeneSet_Table.zip"
 
 
 
