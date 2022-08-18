@@ -21,6 +21,28 @@ To facilitate identifying significant genes and pathways for further analysis, w
 
 # Installation
 
+## R Dependencies
+
+|  |  |  |  |  |  |
+| --- | --- | --- | --- | --- | --- |
+| shiny_1.7.1 | shinythemes_1.2.0 | shinyjqui_0.4.1 | shinycssloaders_1.0.0 | dplyr_1.0.9 | tidyr_1.1.3 |
+| readr_2.1.2 | tibble_3.1.7 | ggplot2_3.3.6 | survival_3.2-11 | survminer_0.4.9 | pheatmap_1.0.12 |
+| GSVA_1.40.1 | clusterProfiler_4.0.5 | ggpubr_0.4.0 | RColorBrewer_1.1-3 | gtsummary_1.6.0 | DT_0.23 |
+| gridExtra_2.3 | viridis_0.6.2 | plotly_4.10.0 | immunedeconv_2.1.0 |  |  |
+
+* Above are the required packages for the R Shiny Application
+* Users are encouraged to pre-intall the packages for quicker initial start-up of the application
+* A package installation script is provided [R_Package_Installation.R](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/R_Package_Installation.R)
+  * This is also in the app.R script in case the user does not pre-install
+* **Please note the immunedeconv package requires R version >= 4.1 to install**
+  * The user may use the app without the package installed and it will work, but without the immune deconvolution data
+
+### R Requirments
+
+* `R` - https://cran.r-project.org/src/base/R-4/
+   * R version >= 4.1 is recommended for use of the immune deconvolution R package
+* `R Studio` - https://www.rstudio.com/products/rstudio/download/
+
 ## Via Download
 
 1. Download the [Zip File](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/archive/refs/heads/main.zip) from this GitHub repository: https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR
@@ -41,20 +63,6 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
 3. Set your working directory in R to the cloned repository
    * This can be done through the "More" settings in the bottom-right box in R Stuido
    * You may also use the `setwd()` function in R Console.
-
-# Requirments
-
-* `R` - https://cran.r-project.org/src/base/R-4/
-* `R Studio` - https://www.rstudio.com/products/rstudio/download/
-
-# R Dependencies
-
-|  |  |  |  |  |  |
-| --- | --- | --- | --- | --- | --- |
-| shiny_1.7.1 | shinythemes_1.2.0 | shinyjqui_0.4.1 | shinycssloaders_1.0.0 | dplyr_1.0.9 | tidyr_1.1.3 |
-| readr_2.1.2 | tibble_3.1.7 | ggplot2_3.3.6 | survival_3.2-11 | survminer_0.4.9 | pheatmap_1.0.12 |
-| GSVA_1.40.1 | clusterProfiler_4.0.5 | ggpubr_0.4.0 | RColorBrewer_1.1-3 | gtsummary_1.6.0 | DT_0.23 |
-| gridExtra_2.3 | viridis_0.6.2 | plotly_4.10.0 |  |  |  |
 
 # Required Files
 
