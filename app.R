@@ -138,9 +138,9 @@ if (is.null(PreSelect_SamplyType) == FALSE) {
     PreSelect_SamplyType <- "All_Sample_Types"
   }
 }
-if (is.null(PreSelec_Feature) == FALSE) {
-  if (grepl("all",PreSelec_Feature, ignore.case = T) == TRUE) {
-    PreSelec_Feature <- "All_Features"
+if (is.null(PreSelect_Feature) == FALSE) {
+  if (grepl("all",PreSelect_Feature, ignore.case = T) == TRUE) {
+    PreSelect_Feature <- "All_Features"
   }
 }
 
