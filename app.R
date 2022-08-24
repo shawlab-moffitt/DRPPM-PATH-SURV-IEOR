@@ -6,9 +6,9 @@ ProjectName <- "Pan ICI Checkpoint iAtlas"
 
 ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
 
-MetaData_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
+MetaData_file <- "Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_ImmDeconv.txt"
 
-MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
+MetaParam_File <- "Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_Params_ImmDeconv.txt"
 
 
 ##--Advanced Set-Up--##
