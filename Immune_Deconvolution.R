@@ -5,13 +5,13 @@
 
 ProjectName <- "PAN_ICI_Skin_Kidney"
 
-Expression_Matrix_File <- "~/R/data/Pan_ICI_Checkpoint/Subset_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
+Expression_Matrix_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
 
-Meta_Data_File <- "~/R/data/Pan_ICI_Checkpoint/Subset_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
+Meta_Data_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt"
 
-Meta_Data_Param_File <- "~/R/data/Pan_ICI_Checkpoint/iatlas-ici-features_updated_params.txt"
+Meta_Data_Param_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
 
-Output_Path <- "~/R/data/Pan_ICI_Checkpoint/Subset_Data/"
+Output_Path <- "Pan_ICI_Example_Data/"
 
 quantiseq <- TRUE
 mcp_counter <- TRUE
