@@ -1,8 +1,9 @@
 
 
-####----Input----####
 
-ProjectName <- "Pan ICI Checkpoint iAtlas"
+####----User Input----####
+
+ProjectName <- "Pan ICI Checkpoint Atlas"
 
 ExpressionMatrix_file <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Expression.zip"
 
@@ -21,9 +22,9 @@ PreSelect_Feature <- "All"
 PreSelect_SubFeature <- NULL
 PreSelect_SecondaryFeature <- NULL
 
-# DO NOT CHANGE - only adjust file path if needed
+# DO NOT CHANGE when using provided gene set data - only adjust file path if needed
 GeneSet_File <- "GeneSet_Data/GeneSet_List.RData"
-GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable.zip"
+GeneSetTable_File <- "GeneSet_Data/GeneSet_Table.zip"
 
 
 
@@ -55,6 +56,7 @@ invisible(lapply(bioCpacks, library, character.only = TRUE))
 
 
 
+
 ####----Read In Files----####
 
 ##--Meta--##
@@ -75,7 +77,12 @@ if (("SampleType" %in% MetaParam[,2]) == FALSE) {
 }
 ## Get surv time and ID columns - move OS to the front of the list
 metacol_survtime <- MetaParam[which(MetaParam[,2] == "SurvivalTime"),1]
+os_time <- grep("os",metacol_survtime, ignore.case = T, value = T)
+metacol_survtime <- c(os_time,metacol_survtime[metacol_survtime != os_time])
+
 metacol_survid <- MetaParam[which(MetaParam[,2] == "SurvivalID"),1]
+os_id <- grep("os",metacol_survid, ignore.case = T, value = T)
+metacol_survid <- c(os_id,metacol_survid[metacol_survid != os_id])
 
 ## Rename and move Sample Name column to the front
 colnames(meta)[which(colnames(meta) == metacol_samplenames)] <- "SampleName"
@@ -109,14 +116,14 @@ GeneGS_table <- data.frame(Genes = exprGenes)
 if (exists("GeneSetTable_File") == TRUE) {
   if (file.exists(GeneSetTable_File) == TRUE) {
     
-    GeneSetTable_og <- as.data.frame(read_delim(GeneSetTable_File, delim = '\t', col_names = T))
+    GeneSetTable <- as.data.frame(read_delim(GeneSetTable_File, delim = '\t', col_names = T))
     gsTab = TRUE
     
   }
   if (file.exists(GeneSetTable_File) == FALSE) {
     
     GeneSets <- names(gs)
-    GeneSetTable_og <- data.frame(GeneSets)
+    GeneSetTable <- data.frame(GeneSets)
     gsTab = FALSE
     
   }
@@ -124,7 +131,7 @@ if (exists("GeneSetTable_File") == TRUE) {
 if (exists("GeneSetTable_File") == FALSE) {
   
   GeneSets <- names(gs)
-  GeneSetTable_og <- data.frame(GeneSets)
+  GeneSetTable <- data.frame(GeneSets)
   gsTab = FALSE
   
 }
@@ -138,9 +145,9 @@ if (is.null(PreSelect_SamplyType) == FALSE) {
     PreSelect_SamplyType <- "All_Sample_Types"
   }
 }
-if (is.null(PreSelec_Feature) == FALSE) {
-  if (grepl("all",PreSelec_Feature, ignore.case = T) == TRUE) {
-    PreSelec_Feature <- "All_Features"
+if (is.null(PreSelect_Feature) == FALSE) {
+  if (grepl("all",PreSelect_Feature, ignore.case = T) == TRUE) {
+    PreSelect_Feature <- "All_Features"
   }
 }
 
@@ -183,277 +190,64 @@ quantile_conversion2 = function(mat,cutoff) {
 
 ##--Perform Immune Deconvolution--##
 
-
-## Grab immune deconv columns if seen in meta
-immuneDeconv_meta_cols <- c(grep("_ImmDeconv$",colnames(meta),value = T),grep("_ImmDeconv_HiLoScore",colnames(meta),value = T))
-decon_score_cols <- c()
-mcp_check <- FALSE
-est_check <- FALSE
-
-## If immune deconv cols in meta
-if (length(immuneDeconv_meta_cols) > 0) {
-  
-  ## Check in immune deconvolution scores were pre-processed
-  mcp_devonv_scores <- grep("mcp_counter_ImmDeconv$",colnames(meta),value = T)
-  if (length(mcp_devonv_scores) > 0) {
-    mcp_check <- TRUE
-    decon_score_cols <- c(decon_score_cols,mcp_devonv_scores)
-    mcp_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                  GeneSet_Category = "Immune Deconvolution Cell Types",
-                                  GeneSet_Sub_Category = "MCP Counter Deconvolution Method",
-                                  GeneSet_Name = gsub("_ImmDeconv","",mcp_devonv_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,mcp_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      mcp_decon_gstab <- mcp_decon_gstab[,3, drop = F]
-      colnames(mcp_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,mcp_decon_gstab)
-    }
-  }
-  
-  estimate_scores <- grep("estimate_ImmDeconv$",colnames(meta),value = T)
-  if (length(estimate_scores) > 0) {
-    est_check <- TRUE
-    decon_score_cols <- c(decon_score_cols,estimate_scores)
-    estimate_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                       GeneSet_Category = "Immune Deconvolution Cell Types",
-                                       GeneSet_Sub_Category = "ESTIMATE Deconvolution Method",
-                                       GeneSet_Name = gsub("_ImmDeconv","",estimate_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,estimate_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      estimate_decon_gstab <- estimate_decon_gstab[,3, drop = F]
-      colnames(estimate_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,estimate_decon_gstab)
-    }
-  }
-  
-  quantiseq_scores <- grep("quantiseq_ImmDeconv$",colnames(meta),value = T)
-  if (length(quantiseq_scores) > 0) {
-    decon_score_cols <- c(decon_score_cols,quantiseq_scores)
-    quantiseq_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                        GeneSet_Category = "Immune Deconvolution Cell Types",
-                                        GeneSet_Sub_Category = "quanTIseq Deconvolution Method",
-                                        GeneSet_Name = gsub("_ImmDeconv","",quantiseq_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,quantiseq_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      quantiseq_decon_gstab <- quantiseq_decon_gstab[,3, drop = F]
-      colnames(quantiseq_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,quantiseq_decon_gstab)
-    }
-  }
-  
-  xcell_scores <- grep("xcell_ImmDeconv$",colnames(meta),value = T)
-  if (length(xcell_scores) > 0) {
-    decon_score_cols <- c(decon_score_cols,xcell_scores)
-    xcell_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                    GeneSet_Category = "Immune Deconvolution Cell Types",
-                                    GeneSet_Sub_Category = "Xcell Deconvolution Method",
-                                    GeneSet_Name = gsub("_ImmDeconv","",xcell_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,xcell_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      xcell_decon_gstab <- xcell_decon_gstab[,3, drop = F]
-      colnames(xcell_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,xcell_decon_gstab)
-    }
-  }
-  
-  epic_scores <- grep("epic_ImmDeconv$",colnames(meta),value = T)
-  if (length(epic_scores) > 0) {
-    decon_score_cols <- c(decon_score_cols,epic_scores)
-    epic_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                   GeneSet_Category = "Immune Deconvolution Cell Types",
-                                   GeneSet_Sub_Category = "EPIC Deconvolution Method",
-                                   GeneSet_Name = gsub("_ImmDeconv","",epic_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,epic_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      epic_decon_gstab <- epic_decon_gstab[,3, drop = F]
-      colnames(epic_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,epic_decon_gstab)
-    }
-  }
-  
-  abis_scores <- grep("abis_ImmDeconv$",colnames(meta),value = T)
-  if (length(abis_scores) > 0) {
-    decon_score_cols <- c(decon_score_cols,abis_scores)
-    abis_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                   GeneSet_Category = "Immune Deconvolution Cell Types",
-                                   GeneSet_Sub_Category = "ABIS Deconvolution Method",
-                                   GeneSet_Name = gsub("_ImmDeconv","",abis_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,abis_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      abis_decon_gstab <- abis_decon_gstab[,3, drop = F]
-      colnames(abis_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,abis_decon_gstab)
-    }
-  }
-  
-  cibersort_scores <- grep("cibersort_ImmDeconv$",colnames(meta),value = T)
-  if (length(cibersort_scores) > 0) {
-    decon_score_cols <- c(decon_score_cols,cibersort_scores)
-    cibersort_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                        GeneSet_Category = "Immune Deconvolution Cell Types",
-                                        GeneSet_Sub_Category = "CIBERSORT Deconvolution Method",
-                                        GeneSet_Name = gsub("_ImmDeconv","",cibersort_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,cibersort_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      cibersort_decon_gstab <- cibersort_decon_gstab[,3, drop = F]
-      colnames(cibersort_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,cibersort_decon_gstab)
-    }
-  }
-  
-  cibersort_abs_scores <- grep("cibersort_abs_ImmDeconv$",colnames(meta),value = T)
-  if (length(cibersort_abs_scores) > 0) {
-    decon_score_cols <- c(decon_score_cols,cibersort_abs_scores)
-    cibersort_abs_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                            GeneSet_Category = "Immune Deconvolution Cell Types",
-                                            GeneSet_Sub_Category = "CIBERSORT ABS Deconvolution Method",
-                                            GeneSet_Name = gsub("_ImmDeconv","",cibersort_abs_scores))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,cibersort_abs_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      cibersort_abs_decon_gstab <- cibersort_abs_decon_gstab[,3, drop = F]
-      colnames(cibersort_abs_decon_gstab)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,cibersort_abs_decon_gstab)
-    }
-  }
-  
-  
-}
-
-
-## If they were not pre-processed, process mcp counter and estimate methods
-
-decon_bin_cols <- c()
-
 if (immudecon_check == TRUE) {
   
-  if (mcp_check == FALSE) {
-    
-    mcp_score_cols <- c()
-    mcp_bin_cols <- c()
-    
-    mcp_counter_decon <- as.data.frame(deconvolute(expr, "mcp_counter"))
-    
-    rownames(mcp_counter_decon) <- mcp_counter_decon[,1]
-    
-    mcp_counter_decon <- mcp_counter_decon[,-1]
-    
-    mcp_counter_decon <- as.data.frame(t(mcp_counter_decon))
-    
-    colnames(mcp_counter_decon) <- paste(gsub(" ","_",colnames(mcp_counter_decon)),"mcp_counter",sep = "_")
-    
-    decon_score_cols <- c(decon_score_cols,colnames(mcp_counter_decon))
-    
-    ## Make Score label rows to add to gene set table
-    mcp_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                  GeneSet_Category = "Immune Deconvolution Cell Types",
-                                  GeneSet_Sub_Category = "MCP Counter Deconvolution Method",
-                                  GeneSet_Name = colnames(mcp_counter_decon))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,mcp_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      mcp_decon_gstab2 <- mcp_decon_gstab[,3, drop = F]
-      colnames(mcp_decon_gstab2)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,mcp_decon_gstab2)
-    }
-    
-    mcp_counter_decon$SampleName <- rownames(mcp_counter_decon)
-    mcp_counter_decon <- mcp_counter_decon %>%
-      relocate(SampleName)
-    
-    meta <- merge(meta,mcp_counter_decon)
-    
-    for (i in decon_score_cols) {
-      new_colname <- paste(i,"_HiLoScore",sep = "")
-      meta[,paste(i,"_HiLoScore",sep = "")] <- highlow(meta[,which(colnames(meta) == i)])
-      decon_bin_cols <- c(decon_bin_cols,new_colname)
-    }
-    
+  estimate_decon <- as.data.frame(deconvolute(expr, "estimate"))
+  mcp_counter_decon <- as.data.frame(deconvolute(expr, "mcp_counter"))
+  
+  rownames(estimate_decon) <- estimate_decon[,1]
+  rownames(mcp_counter_decon) <- mcp_counter_decon[,1]
+  
+  estimate_decon <- estimate_decon[,-1]
+  mcp_counter_decon <- mcp_counter_decon[,-1]
+  
+  estimate_decon <- as.data.frame(t(estimate_decon))
+  mcp_counter_decon <- as.data.frame(t(mcp_counter_decon))
+  
+  colnames(estimate_decon) <- paste(gsub(" ","_",colnames(estimate_decon)),"ESTIMATE",sep = "_")
+  colnames(mcp_counter_decon) <- paste(gsub(" ","_",colnames(mcp_counter_decon)),"MCPcount",sep = "_")
+  
+  decon_score_cols <- c(colnames(estimate_decon),colnames(mcp_counter_decon))
+  
+  ## Make Score label rows to add to gene set table
+  est_decon_gstab <- data.frame(GeneSet_Category = "Immune Deconvolution Gene Sets",
+                                GeneSet_Sub_Category = "ESTIMATE Deconvolution Method",
+                                GeneSet_Name = colnames(estimate_decon))
+  mcp_decon_gstab <- data.frame(GeneSet_Category = "Immune Deconvolution Gene Sets",
+                                GeneSet_Sub_Category = "MCP Counter Deconvolution Method",
+                                GeneSet_Name = colnames(mcp_counter_decon))
+  if (gsTab == TRUE) {
+    GeneSetTable <- rbind(GeneSetTable,est_decon_gstab,mcp_decon_gstab)
+  }
+  if (gsTab == FALSE) {
+    col_name <- colnames(GeneSetTable)[1]
+    est_decon_gstab2 <- est_decon_gstab[,3, drop = F]
+    colnames(est_decon_gstab2)[1] <- col_name
+    mcp_decon_gstab2 <- mcp_decon_gstab[,3, drop = F]
+    colnames(mcp_decon_gstab2)[1] <- col_name
+    GeneSetTable <- rbind(GeneSetTable,est_decon_gstab2,mcp_decon_gstab2)
   }
   
-}
-
-
-## If they were not pre-processed, process mcp counter and estimate methods
-if (immudecon_check == TRUE) {
+  estimate_decon$SampleName <- rownames(estimate_decon)
+  estimate_decon <- estimate_decon %>%
+    relocate(SampleName)
+  mcp_counter_decon$SampleName <- rownames(mcp_counter_decon)
+  mcp_counter_decon <- mcp_counter_decon %>%
+    relocate(SampleName)
   
-  if (est_check == FALSE) {
-    
-    estimate_decon <- as.data.frame(deconvolute(expr, "estimate"))
-    
-    rownames(estimate_decon) <- estimate_decon[,1]
-    
-    estimate_decon <- estimate_decon[,-1]
-    
-    estimate_decon <- as.data.frame(t(estimate_decon))
-    
-    colnames(estimate_decon) <- paste(gsub(" ","_",colnames(estimate_decon)),"estimate",sep = "_")
-    
-    decon_score_cols <- c(decon_score_cols,colnames(estimate_decon))
-    
-    ## Make Score label rows to add to gene set table
-    est_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
-                                  GeneSet_Category = "Immune Deconvolution Cell Types",
-                                  GeneSet_Sub_Category = "ESTIMATE Deconvolution Method",
-                                  GeneSet_Name = colnames(estimate_decon))
-    if (gsTab == TRUE) {
-      GeneSetTable_og <- rbind(GeneSetTable_og,est_decon_gstab)
-    }
-    if (gsTab == FALSE) {
-      col_name <- colnames(GeneSetTable_og)[1]
-      est_decon_gstab2 <- est_decon_gstab[,3, drop = F]
-      colnames(est_decon_gstab2)[1] <- col_name
-      GeneSetTable_og <- rbind(GeneSetTable_og,est_decon_gstab2)
-    }
-    
-    estimate_decon$SampleName <- rownames(estimate_decon)
-    estimate_decon <- estimate_decon %>%
-      relocate(SampleName)
-    
-    meta <- merge(meta,estimate_decon)
-    
-    for (i in decon_score_cols) {
-      new_colname <- paste(i,"_HiLoScore",sep = "")
-      meta[,paste(i,"_HiLoScore",sep = "")] <- highlow(meta[,which(colnames(meta) == i)])
-      decon_bin_cols <- c(decon_bin_cols,new_colname)
-    }
-    
+  meta <- merge(meta,estimate_decon,by = "SampleName",all.x = T)
+  meta <- merge(meta,mcp_counter_decon,by = "SampleName",all.x = T)
+  
+  decon_bin_cols <- c()
+  for (i in decon_score_cols) {
+    new_colname <- paste(i,"_HiLoScore",sep = "")
+    meta[,paste(i,"_HiLoScore",sep = "")] <- highlow(meta[,which(colnames(meta) == i)])
+    decon_bin_cols <- c(decon_bin_cols,new_colname)
   }
   
+  metacol_feature <- c(metacol_feature,decon_bin_cols,decon_score_cols)
+  
 }
-
-
-decon_score_cols <- gsub("_ImmDeconv","",decon_score_cols)
-decon_bin_cols <- gsub("_ImmDeconv","",decon_bin_cols)
-
-metacol_feature <- c(metacol_feature,decon_bin_cols,decon_score_cols)
-colnames(meta) <- gsub("_ImmDeconv","",colnames(meta))
-
 
 
 ####----UI----####
@@ -484,9 +278,6 @@ ui <-
                                        tabsetPanel(
                                          id = "GeneSetTabs",
                                          tabPanel("Gene Sets",
-                                                  p(),
-                                                  selectInput("GeneSetCat_Select","Select Category",
-                                                              choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures","Immune Deconvolution Scores")),
                                                   uiOutput("rendGeneSetTable"),
                                                   value = 1
                                          ),
@@ -612,7 +403,6 @@ ui <-
                               
                               tabPanel("Pathway Level Survival Analysis",
                                        p(),
-                                       ##--Quaritle Cutpoints--##
                                        withSpinner(jqui_resizable(plotOutput("Splot", width = "100%", height = "500px")), type = 6),
                                        fluidRow(
                                          downloadButton("dnldSplot_SVG","Download as SVG"),
@@ -621,7 +411,7 @@ ui <-
                                        fluidRow(
                                          column(3,
                                                 offset = 1,
-                                                checkboxInput("ShowQaurtHR","Display Hazard Ratio Table")),
+                                                checkboxInput("ShowQaurtHR","Display Quartile Hazard Ratio Table")),
                                          column(4,
                                                 uiOutput("rendQuartHRtab"))
                                        ),
@@ -630,7 +420,6 @@ ui <-
                                            tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                                          hr()
                                        ),
-                                       ##--Median Cutpoint--##
                                        withSpinner(jqui_resizable(plotOutput("SplotBIN", width = "100%", height = "500px")), type = 6),
                                        fluidRow(
                                          downloadButton("dnldSplotBIN_SVG","Download as SVG"),
@@ -639,7 +428,7 @@ ui <-
                                        fluidRow(
                                          column(3,
                                                 offset = 1,
-                                                checkboxInput("ShowBINHR","Display Hazard Ratio Table")),
+                                                checkboxInput("ShowBINHR","Display Binary Hazard Ratio Table")),
                                          column(4,
                                                 uiOutput("rendBINHRtab"))
                                        ),
@@ -648,25 +437,6 @@ ui <-
                                            tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                                          hr()
                                        ),
-                                       ##--Optimal Cutpoint--##
-                                       withSpinner(jqui_resizable(plotOutput("ScutPointPlot", width = "100%", height = "500px")), type = 6),
-                                       fluidRow(
-                                         downloadButton("dnldScutPointPlot_SVG","Download as SVG"),
-                                         downloadButton("dnldScutPointPlot_PDF","Download as PDF")
-                                       ),
-                                       fluidRow(
-                                         column(3,
-                                                offset = 1,
-                                                checkboxInput("ShowCutPointHR","Display Hazard Ratio Table")),
-                                         column(4,
-                                                uiOutput("rendCutPointHRtab"))
-                                       ),
-                                       fluidRow(
-                                         tags$head(
-                                           tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
-                                         hr()
-                                       ),
-                                       ##--High/Low Quantile--##
                                        withSpinner(jqui_resizable(plotOutput("SquantPlot", width = "100%", height = "500px")), type = 6),
                                        numericInput("QuantPercent","High/Low Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                        fluidRow(
@@ -676,7 +446,7 @@ ui <-
                                        fluidRow(
                                          column(3,
                                                 offset = 1,
-                                                checkboxInput("ShowQuantHR","Display Hazard Ratio Table")),
+                                                checkboxInput("ShowQuantHR","Display Quantile Hazard Ratio Table")),
                                          column(4,
                                                 uiOutput("rendQuantHRtab"))
                                        ),
@@ -685,7 +455,6 @@ ui <-
                                            tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                                          hr()
                                        ),
-                                       ##--Above/Below Cut Point--##
                                        withSpinner(jqui_resizable(plotOutput("SquantPlot2", width = "100%", height = "500px")), type = 6),
                                        numericInput("QuantPercent2","Above/Below Risk Quantile Cutoff (%)", value = 25, min = 0, max = 100),
                                        fluidRow(
@@ -695,7 +464,7 @@ ui <-
                                        fluidRow(
                                          column(3,
                                                 offset = 1,
-                                                checkboxInput("ShowQuantHR2","Display Hazard Ratio Table")),
+                                                checkboxInput("ShowQuantHR2","Display Quantile Hazard Ratio Table")),
                                          column(4,
                                                 uiOutput("rendQuantHRtab2"))
                                        ),
@@ -1056,7 +825,6 @@ ui <-
                                                   value = 1),
                                          tabPanel("Risk Straification Heatmap",
                                                   p(),
-                                                  uiOutput("heatmap_error_message"),
                                                   withSpinner(jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
                                                   downloadButton("dnldSheatmapexpr","Download Expression Matrix From Heatmap"),
                                                   value = 2),
@@ -1070,7 +838,6 @@ ui <-
                                                   value = 3),
                                          tabPanel("Feature Heatmap",
                                                   p(),
-                                                  uiOutput("heatmap_error_message2"),
                                                   uiOutput("rendHeatmapFeature"),
                                                   withSpinner(jqui_resizable(plotOutput("FeatureHeatmap", width = "100%", height = "2000px")), type = 6),
                                                   downloadButton("dnldFheatmapexpr","Download Expression Matrix From Heatmap"),
@@ -1741,24 +1508,9 @@ server <- function(input, output, session) {
     }    
     
   })
-  output$rendQuantHRtab2 <- renderUI({
-    
-    if (input$ShowQuantHR2 == T) {
-      div(withSpinner(tableOutput("SQuantileHR2tab"), type = 7, size = 0.5), style = "font-size:10px")
-    }    
-    
-  })
-  output$rendCutPointHRtab <- renderUI({
-    
-    if (input$ShowCutPointHR == T) {
-      div(withSpinner(tableOutput("CutPointHRtab"), type = 7, size = 0.5), style = "font-size:10px")
-    }    
-    
-  })
   
   
   ####----Data Tables----####
-  
   
   ## Render Meta Table
   output$MetaTable <- renderDataTable({
@@ -1844,21 +1596,10 @@ server <- function(input, output, session) {
     
   })
   
-  GeneSetTable_React <- reactive({
-    
-    GS_database <- input$GeneSetCat_Select
-    sub_tab <- GeneSetTable_og[which(GeneSetTable_og[,1] == GS_database),]
-    new_tab <- sub_tab[,-1]
-    new_tab
-    
-  })
-  
   ## Render Gene Set Selection Table
   output$GeneSetTable <- renderDataTable({
     
-    new_GeneSetTable <- GeneSetTable_React()
-    
-    DT::datatable(new_GeneSetTable,
+    DT::datatable(GeneSetTable,
                   options = list(lengthMenu = c(5,10, 20, 100, 1000),
                                  pageLength = 10,
                                  scrollX = T),
@@ -2015,8 +1756,6 @@ server <- function(input, output, session) {
   ## Reactive to represent the chosen gene set
   gs_react <- reactive({
     
-    GeneSetTable <- GeneSetTable_React()
-    
     if (input$GeneSetTabs == 1) {
       if (gsTab == TRUE) {
         geneset_name <- GeneSetTable[input$GeneSetTable_rows_selected,3]
@@ -2124,38 +1863,14 @@ server <- function(input, output, session) {
     rownames(expr_mat) <- rownames(expr_sub)
     colnames(expr_mat) <- colnames(expr_sub)
     
-    if (input$GeneSetTabs == 1) {
-      if (geneset_name %in% decon_score_cols) {
-        ssGSEA <- meta[,c("SampleName",geneset_name)]
-      }
-      else {
-        ## Perform ssGSEA with gs and new subset data
-        scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
-        ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
-        ## Transform
-        ssGSEA <- as.data.frame(t(ssGSEA))
-        ssGSEA$SampleName <- rownames(ssGSEA)
-      }
-    }
-    else if (input$GeneSetTabs == 3) {
-      ## Perform ssGSEA with gs and new subset data
-      scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
-      ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
-      ## Transform
-      ssGSEA <- as.data.frame(t(ssGSEA))
-      ssGSEA$SampleName <- rownames(ssGSEA)
-    }
-    else if (input$GeneSetTabs == 2) {
+    if (geneset_name %in% decon_score_cols) {
       
-      if (input$RawOrSS == "Raw Gene Expression") {
-        
-        expr_sub2 <- expr_sub[geneset_name,]
-        expr_sub3 <- as.data.frame(t(expr_sub2))
-        expr_sub3$SampleName <- rownames(expr_sub3)
-        ssGSEA <- expr_sub3
-        
-      }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      ssGSEA <- meta[,c("SampleName",geneset_name)]
+      
+    }
+    else if ((geneset_name %in% decon_score_cols) == FALSE) {
+      
+      if (input$GeneSetTabs == 1 | input$GeneSetTabs == 3) {
         
         ## Perform ssGSEA with gs and new subset data
         scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
@@ -2165,6 +1880,29 @@ server <- function(input, output, session) {
         ssGSEA$SampleName <- rownames(ssGSEA)
         
       }
+      else if (input$GeneSetTabs == 2) {
+        
+        if (input$RawOrSS == "Raw Gene Expression") {
+          
+          expr_sub2 <- expr_sub[geneset_name,]
+          expr_sub3 <- as.data.frame(t(expr_sub2))
+          expr_sub3$SampleName <- rownames(expr_sub3)
+          ssGSEA <- expr_sub3
+          
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          
+          ## Perform ssGSEA with gs and new subset data
+          scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
+          ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
+          ## Transform
+          ssGSEA <- as.data.frame(t(ssGSEA))
+          ssGSEA$SampleName <- rownames(ssGSEA)
+          
+        }
+        
+      }
+      
     }
     
     ## Perform further functions
@@ -2300,12 +2038,7 @@ server <- function(input, output, session) {
       }
     }
     else if (input$GeneSetTabs != 2) {
-      if (geneset_name %in% decon_score_cols) {
-        scoreMethodLab <- "Immune Deconvolution score"
-      }
-      else {
-        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
-      }
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
     }
     
     if (is.null(input$SurvXaxis) == TRUE) {
@@ -2417,12 +2150,7 @@ server <- function(input, output, session) {
       }
     }
     else if (input$GeneSetTabs != 2) {
-      if (geneset_name %in% decon_score_cols) {
-        scoreMethodLab <- "Immune Deconvolution score"
-      }
-      else {
-        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
-      }
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
     }
     
     if (is.null(input$SurvXaxis) == TRUE) {
@@ -2487,139 +2215,6 @@ server <- function(input, output, session) {
     
   })
   
-  ## Survival Plot - Quartile
-  ScutPointPlot_react <- reactive({
-    
-    ## Assign variables
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    SampleType <- input$SampleTypeSelection
-    Feature <- input$FeatureSelection
-    scoreMethod <- input$ScoreMethod
-    show_pval <- input$ShowPval
-    xaxlim <- input$SurvXaxis * 365.25
-    #if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-    #  surv_time_col <- metacol_survtime[1]
-    #  surv_id_col <- metacol_survid[1]
-    #}
-    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-      surv_time_col <- input$SurvivalType_time
-      surv_id_col <- input$SurvivalType_id
-    }
-    else {
-      surv_time_col <- metacol_survtime[1]
-      surv_id_col <- metacol_survid[1]
-    }
-    
-    surv_time_col <- "OS.time"
-    expr <- exprSub()
-    meta_ssgsea <- ssGSEAmeta()
-    
-    ## Determine type of survival data - OS/EFS/PFS?
-    SurvDateType <- sub("\\..*","",surv_time_col)
-    
-    ## Remove rows with NA in survival column
-    meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-    
-    ## Subset columns needed for plot and rename for surv function
-    meta_ssgsea_sdf <- meta_ssgsea[,c("SampleName",surv_time_col,surv_id_col,geneset_name)]
-    
-    geneset_name <- gsub("[[:punct:]]","_",geneset_name)
-    colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-    
-    res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name)
-    res.cat <- surv_categorize(res.cut)
-    
-    ## Subset columns needed for plot and rename for surv function
-    colnames(res.cat)[which(colnames(res.cat) == surv_time_col)] <- "OS.time"
-    colnames(res.cat)[which(colnames(res.cat) == surv_id_col)] <- "OS.ID"
-    
-    form <- paste("Surv(OS.time,OS.ID) ~ ",geneset_name,sep = "")
-    form2 <- as.formula(form)
-    fit <- eval(substitute(survfit(form2,data = res.cat, type="kaplan-meier")))
-    
-    
-    ## Adjust 'Sample Type' for label 
-    if (length(unique(meta[,metacol_sampletype])) > 1) {
-      SampleTypeLab <- paste(" (",SampleType,") ",sep = "")
-    }
-    if (length(unique(meta[,metacol_sampletype])) <= 1) {
-      SampleTypeLab <- " "
-    }
-    
-    if (input$GeneSetTabs == 2) {
-      if (input$RawOrSS == "Raw Gene Expression") {
-        scoreMethodLab <- "Raw Gene Expression"
-      }
-      else if (input$RawOrSS == "Rank Normalized") {
-        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
-      }
-    }
-    else if (input$GeneSetTabs != 2) {
-      if (geneset_name %in% decon_score_cols) {
-        scoreMethodLab <- "Immune Deconvolution score"
-      }
-      else {
-        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
-      }
-    }
-    
-    if (is.null(input$SurvXaxis) == TRUE) {
-      
-      ## Generate plot
-      ggsurv <- ggsurvplot(fit, data = res.cat, risk.table = TRUE,
-                           title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n", geneset_name," (",scoreMethodLab," Optimal Cut-Point)", sep = ""),
-                           xscale = c("d_y"),
-                           break.time.by=365.25,
-                           xlab = "Years", 
-                           ylab = paste(SurvDateType,"Survival Probability"),
-                           submain = "Based on Kaplan-Meier estimates",
-                           caption = "created with survminer", pval=show_pval, ggtheme = theme_bw(),
-                           font.title = c(16, "bold"),
-                           font.submain = c(12, "italic"),
-                           font.caption = c(12, "plain"),
-                           font.x = c(14, "plain"),
-                           font.y = c(14, "plain"),
-                           font.tickslab = c(12, "plain")
-      )
-      
-      ggsurv$table <- ggsurv$table + theme_cleantable()
-      ggsurv
-      
-    }
-    
-    else if (is.null(input$SurvXaxis) == FALSE) {
-      
-      ## Generate plot
-      ggsurv <- ggsurvplot(fit, data = res.cat, risk.table = TRUE,
-                           title = paste("Survival curves of ",Feature,SampleTypeLab,"Patients\n", geneset_name," (",scoreMethodLab," Optimal Cut-Point)", sep = ""),
-                           xscale = c("d_y"),
-                           break.time.by=365.25,
-                           xlab = "Years", 
-                           ylab = paste(SurvDateType,"Survival Probability"),
-                           submain = "Based on Kaplan-Meier estimates",
-                           caption = "created with survminer", pval=show_pval, ggtheme = theme_bw(),
-                           font.title = c(16, "bold"),
-                           font.submain = c(12, "italic"),
-                           font.caption = c(12, "plain"),
-                           font.x = c(14, "plain"),
-                           font.y = c(14, "plain"),
-                           font.tickslab = c(12, "plain"),
-                           xlim = c(0,xaxlim)
-      )
-      
-      ggsurv$table <- ggsurv$table + theme_cleantable()
-      ggsurv
-      
-    }
-    
-  })
-  
-  output$ScutPointPlot <- renderPlot({
-    plot <- ScutPointPlot_react()
-    plot
-  })
-  
   ## Survival Plot - Quantile
   SquantPlot_react <- reactive({
     
@@ -2679,12 +2274,7 @@ server <- function(input, output, session) {
       }
     }
     else if (input$GeneSetTabs != 2) {
-      if (geneset_name %in% decon_score_cols) {
-        scoreMethodLab <- "Immune Deconvolution score"
-      }
-      else {
-        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
-      }
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
     }
     
     if (is.null(input$SurvXaxis) == TRUE) {
@@ -2806,12 +2396,7 @@ server <- function(input, output, session) {
       }
     }
     else if (input$GeneSetTabs != 2) {
-      if (geneset_name %in% decon_score_cols) {
-        scoreMethodLab <- "Immune Deconvolution score"
-      }
-      else {
-        scoreMethodLab <- paste(scoreMethod, " score", sep = "")
-      }
+      scoreMethodLab <- paste(scoreMethod, " score", sep = "")
     }
     
     if (is.null(input$SurvXaxis) == TRUE) {
@@ -3192,7 +2777,6 @@ server <- function(input, output, session) {
     colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "OS.time"
     colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "OS.ID"
     
-    
     ## Survival Function
     tab <- coxph(Surv(OS.time,OS.ID) ~ QuartilePScore, data = meta_ssgsea_sdf) %>% 
       gtsummary::tbl_regression(exp = TRUE) %>%
@@ -3238,10 +2822,6 @@ server <- function(input, output, session) {
     colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "OS.time"
     colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "OS.ID"
     
-    
-    meta_ssgsea_sdf[,"HiLoPScore"] <- as.factor(meta_ssgsea_sdf[,"HiLoPScore"])
-    meta_ssgsea_sdf[,"HiLoPScore"] <- relevel(meta_ssgsea_sdf[,"HiLoPScore"], ref = "Low_BelowMedian")
-    
     ## Survival Function
     tab <- coxph(Surv(OS.time,OS.ID) ~ HiLoPScore, data = meta_ssgsea_sdf) %>% 
       gtsummary::tbl_regression(exp = TRUE) %>%
@@ -3252,68 +2832,6 @@ server <- function(input, output, session) {
     tab_df <- tab_df %>%
       select(label,estimate,ci,p.value)
     colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
-    
-    tab_df
-    
-  })
-  
-  output$CutPointHRtab <- renderTable({
-    ## Assign variables
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    SampleType <- input$SampleTypeSelection
-    Feature <- input$FeatureSelection
-    scoreMethod <- input$ScoreMethod
-    show_pval <- input$ShowPval
-    xaxlim <- input$SurvXaxis * 365.25
-    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-      surv_time_col <- input$SurvivalType_time
-      surv_id_col <- input$SurvivalType_id
-    }
-    else {
-      surv_time_col <- metacol_survtime[1]
-      surv_id_col <- metacol_survid[1]
-    }
-    
-    surv_time_col <- "OS.time"
-    expr <- exprSub()
-    meta_ssgsea <- ssGSEAmeta()
-    
-    ## Determine type of survival data - OS/EFS/PFS?
-    SurvDateType <- sub("\\..*","",surv_time_col)
-    
-    ## Remove rows with NA in survival column
-    meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-    
-    ## Subset columns needed for plot and rename for surv function
-    meta_ssgsea_sdf <- meta_ssgsea[,c("SampleName",surv_time_col,surv_id_col,geneset_name)]
-    
-    geneset_name <- gsub("[[:punct:]]","_",geneset_name)
-    colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
-    
-    res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name)
-    res.cat <- surv_categorize(res.cut)
-    
-    ## Subset columns needed for plot and rename for surv function
-    #colnames(res.cat)[which(colnames(res.cat) == surv_time_col)] <- "OS.time"
-    #colnames(res.cat)[which(colnames(res.cat) == surv_id_col)] <- "OS.ID"
-    
-    
-    res.cat[,geneset_name] <- as.factor(res.cat[,geneset_name])
-    res.cat[,geneset_name] <- relevel(res.cat[,geneset_name], ref = "low")
-    
-    
-    ## Survival Function
-    tab <- coxph(as.formula(paste("Surv(",surv_time_col,",",surv_id_col,") ~ ",geneset_name,sep = "")),
-                 data = res.cat) %>% 
-      gtsummary::tbl_regression(exp = TRUE) %>%
-      as_gt()
-    
-    tab_df <- as.data.frame(tab)
-    tab_df[is.na(tab_df)] <- ""
-    tab_df <- tab_df %>%
-      select(label,n_obs,estimate,std.error,ci,p.value)
-    colnames(tab_df) <- c("Variable","N","Hazard Ratio","Std. Error","95% Confidence Interval","P.Value")
     
     tab_df
     
@@ -3352,60 +2870,8 @@ server <- function(input, output, session) {
     ## Remove between cutoff samples
     meta_ssgsea_sdf <- meta_ssgsea_sdf[which(meta_ssgsea_sdf$QuantCutoffPScore != "BetweenCutoff"),]
     
-    
-    meta_ssgsea_sdf[,"QuantCutoffPScore"] <- as.factor(meta_ssgsea_sdf[,"QuantCutoffPScore"])
-    meta_ssgsea_sdf[,"QuantCutoffPScore"] <- relevel(meta_ssgsea_sdf[,"QuantCutoffPScore"], ref = "Low_BelowCutoff")
-    
     ## Survival Function
     tab <- coxph(Surv(OS.time,OS.ID) ~ QuantCutoffPScore, data = meta_ssgsea_sdf) %>% 
-      gtsummary::tbl_regression(exp = TRUE) %>%
-      as_gt()
-    
-    tab_df <- as.data.frame(tab)
-    
-    tab_df <- tab_df %>%
-      select(label,estimate,ci,p.value)
-    colnames(tab_df) <- c("Characteristic","Hazard Ratio","95% Confidence Interval","P.Value")
-    
-    tab_df
-    
-  })
-  
-  output$SQuantileHR2tab <- renderTable({
-    
-    ## Assign variables
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    SampleType <- input$SampleTypeSelection
-    Feature <- input$FeatureSelection
-    scoreMethod <- input$ScoreMethod
-    if (is.null(input$SurvivalType_time) == TRUE & is.null(input$SurvivalType_id) == TRUE) {
-      surv_time_col <- metacol_survtime[1]
-      surv_id_col <- metacol_survid[1]
-    }
-    if (is.null(input$SurvivalType_time) == FALSE & is.null(input$SurvivalType_id) == FALSE) {
-      surv_time_col <- input$SurvivalType_time
-      surv_id_col <- input$SurvivalType_id
-    }
-    expr <- exprSub()
-    meta_ssgsea <- ssGSEAmeta()
-    
-    ## Determine type of survival data - OS/EFS/PFS?
-    SurvDateType <- sub("\\..*","",surv_time_col)
-    
-    ## Remove rows with NA in survival column
-    meta_ssgsea <- meta_ssgsea[!is.na(meta_ssgsea[,surv_time_col]),]
-    
-    ## Subset columns needed for plot and rename for surv function
-    meta_ssgsea_sdf <- meta_ssgsea[,c("SampleName",surv_time_col,surv_id_col,"AboveBelowCutoffPScore")]
-    colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_time_col)] <- "OS.time"
-    colnames(meta_ssgsea_sdf)[which(colnames(meta_ssgsea_sdf) == surv_id_col)] <- "OS.ID"
-    
-    meta_ssgsea_sdf[,"AboveBelowCutoffPScore"] <- as.factor(meta_ssgsea_sdf[,"AboveBelowCutoffPScore"])
-    meta_ssgsea_sdf[,"AboveBelowCutoffPScore"] <- relevel(meta_ssgsea_sdf[,"AboveBelowCutoffPScore"], ref = "Low_BelowCutoff")
-    
-    ## Survival Function
-    tab <- coxph(Surv(OS.time,OS.ID) ~ AboveBelowCutoffPScore, data = meta_ssgsea_sdf) %>% 
       gtsummary::tbl_regression(exp = TRUE) %>%
       as_gt()
     
@@ -3464,6 +2930,13 @@ server <- function(input, output, session) {
         ## Subset columns needed for plot and rename for surv function
         select_cols <- c("SampleName",surv_time_col,surv_id_col,Feature)
         meta_ssgsea_sdf <- meta_ssgsea[,select_cols]
+        
+        #if (input$UniVarNAcheck == TRUE) {
+        #  
+        #  meta_ssgsea_sdf <- meta_ssgsea_sdf[which(is.na(meta_ssgsea_sdf[,Feature]) == FALSE),]
+        #  meta_ssgsea_sdf <- meta_ssgsea_sdf[grep("unknown",meta_ssgsea_sdf[,Feature],ignore.case = T, invert = T),]
+        #  
+        #}
         
         colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
         Feature <- gsub("[[:punct:]]","_",Feature)
@@ -5762,43 +5235,16 @@ server <- function(input, output, session) {
     if (length(unique(meta[,metacol_sampletype])) <= 1) {
       SampleTypeLab <- " "
     }
-    if (GeneSet %in% decon_score_cols) {
-      scoreMethod <- "Immune Deconvolution Score"
-    }
-    if (input$GeneSetTabs == 2) {
-      if (input$RawOrSS == "Raw Gene Expression") {
-        scoreMethod <- "Raw Gene Expression"
-      }
-    }
     
     ggplot(ssGSEA_meta, aes(factor(SurvivalCutoff), ssGSEA_meta[,GeneSet], fill = SurvivalCutoff)) +
       geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
       geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
       labs(x = "Group", y = paste(GeneSet," ",scoreMethod, " Score", sep = ""),
-           title = paste(GeneSet,scoreMethod," Score: ",Feature,SampleTypeLab,"Patients",sep = "")) +
+           title = paste(GeneSet," Gene Set ",scoreMethod," Score: ",Feature,SampleTypeLab,"Patients",sep = "")) +
       theme_bw() +
       stat_compare_means(method = input$boxoptselec) +
       theme(text = element_text(size = font))
     
-    
-  })
-  
-  output$heatmap_error_message <- renderUI({
-    
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    if (geneset_name %in% decon_score_cols | input$GeneSetTabs == 2) {
-      p("Heatmap not available for immune deconvolution or single gene analysis")
-    }
-    
-  })
-  output$heatmap_error_message2 <- renderUI({
-    
-    geneset <- gs_react()
-    geneset_name <- names(geneset)
-    if (geneset_name %in% decon_score_cols | input$GeneSetTabs == 2) {
-      p("Heatmap not available for immune deconvolution or single gene analysis")
-    }
     
   })
   
@@ -5909,22 +5355,12 @@ server <- function(input, output, session) {
       SampleTypeLab <- " "
     }
     
-    if (GeneSet %in% decon_score_cols) {
-      scoreMethod <- "Immune Deconvolution Score"
-    }
-    if (input$GeneSetTabs == 2) {
-      if (input$RawOrSS == "Raw Gene Expression") {
-        scoreMethod <- "Raw Gene Expression"
-      }
-    }
-    
-    
     if (is.na(as.numeric(boxplotang)) == TRUE) {
       ggplot(boxTab, aes(factor(boxTab[,FeatureSelec]), boxTab[,GeneSet], fill = boxTab[,FeatureSelec])) +
         geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
         geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
         labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-             title = paste(GeneSet,scoreMethod," Score: ","\n",
+             title = paste(GeneSet," Gene Set ",scoreMethod," Score: ","\n",
                            Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
              fill = FeatureSelec) +
         theme_bw() +
@@ -5939,7 +5375,7 @@ server <- function(input, output, session) {
           geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
           geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
           labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-               title = paste(GeneSet,scoreMethod," Score: ","\n",
+               title = paste(GeneSet," Gene Set ",scoreMethod," Score: ","\n",
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
@@ -5951,7 +5387,7 @@ server <- function(input, output, session) {
           geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
           geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
           labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-               title = paste(GeneSet,scoreMethod," Score: ","\n",
+               title = paste(GeneSet," Gene Set ",scoreMethod," Score: ","\n",
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
@@ -5964,7 +5400,7 @@ server <- function(input, output, session) {
           geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
           geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
           labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-               title = paste(GeneSet,scoreMethod," Score: ","\n",
+               title = paste(GeneSet," Gene Set ",scoreMethod," Score: ","\n",
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
@@ -6081,41 +5517,23 @@ server <- function(input, output, session) {
     
     user_vline <- quantile(ssgsea_scores[,geneset_name],probs = user_quant)
     
-    ## get score method for x and y labels
     if (input$GeneSetTabs == 2) {
       if (input$RawOrSS == "Raw Gene Expression") {
         scoreMethodLab <- "Raw Gene Expression Density"
-        scoreMethodLab_x <- "Raw Gene Expression"
       }
       else if (input$RawOrSS == "ssGSEA Rank Normalized") {
         scoreMethodLab <- paste(scoreMethod, " Score Density", sep = "")
-        scoreMethodLab_x <- paste(scoreMethod, " Score", sep = "")
       }
     }
     else if (input$GeneSetTabs != 2) {
-      if (geneset_name %in% decon_score_cols) {
-        scoreMethodLab <- "Immune Deconvolution Score Density"
-        scoreMethodLab_x <- "Immune Deconvolution Score"
-      }
-      else {
-        scoreMethodLab <- paste(scoreMethod, " Score Density", sep = "")
-        scoreMethodLab_x <- paste(scoreMethod, " Score", sep = "")
-      }
-    }
-    ## generate title based on input
-    if (geneset_name %in% decon_score_cols) {
-      dens_title <- paste(colnames(ssgsea_scores)[2]," Immune Deconvolution Score Density",sep = "")
-    }
-    else {
-      dens_title <- paste(colnames(ssgsea_scores)[2],scoreMethodLab)
+      scoreMethodLab <- paste(scoreMethod, " Score Density", sep = "")
     }
     
     p <- ggplot(ssgsea_scores, aes(x=ssgsea_scores[,geneset_name])) + 
       geom_density(color="darkblue", fill="lightblue", alpha = 0.4) +
-      xlab(scoreMethodLab_x) +
+      xlab(paste(scoreMethod,"Score")) +
       ylab(scoreMethodLab) +
-      #ggtitle(paste(colnames(ssgsea_scores)[2],scoreMethodLab)) +
-      ggtitle(dens_title) +
+      ggtitle(paste(colnames(ssgsea_scores)[2],scoreMethodLab)) +
       theme(axis.text = element_text(size = 14),
             axis.title = element_text(size = 16),
             plot.title = element_text(size = 20))
@@ -6975,7 +6393,6 @@ server <- function(input, output, session) {
   
   
 }
-
 
 # Run the application
 shinyApp(ui = ui, server = server)
