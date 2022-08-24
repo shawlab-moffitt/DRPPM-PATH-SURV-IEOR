@@ -1652,7 +1652,7 @@ server <- function(input, output, session) {
   ## View Gene - "Gene Set" table
   output$rendGeneGeneSetTable <- renderUI({
     
-    div(DT::dataTableOutput("geneGeneSetTable"), style = "font-size:10px; height:450px; overflow-Y: scroll")
+    div(DT::dataTableOutput("geneGeneSetTable"), style = "font-size:10px")
     
   })
   
@@ -1660,7 +1660,7 @@ server <- function(input, output, session) {
   output$rendUserGeneSetTable <- renderUI({
     
     req(input$userGeneSet)
-    div(DT::dataTableOutput("userGeneSetTable"), style = "font-size:10px; height:450px; overflow-Y: scroll")
+    div(DT::dataTableOutput("userGeneSetTable"), style = "font-size:10px")
     
   })
   
