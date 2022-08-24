@@ -42,6 +42,7 @@ To facilitate identifying significant genes and pathways for further analysis, w
   * This is also in the app.R script in case the user does not pre-install
 * **Please note the immunedeconv package requires R version >= 4.1 to install**
   * More information on this package can be found here: https://github.com/omnideconv/immunedeconv
+  * This package requires additional packages to install completely, once all is installed you only need to load the immundeconv package for the app
   * The user may use the app without the package installed and it will work, but without the immune deconvolution data
 
 ## Via Download
