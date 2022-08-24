@@ -1644,7 +1644,7 @@ server <- function(input, output, session) {
   ## View Gene Set table
   output$rendGeneSetTable <- renderUI({
     
-    div(DT::dataTableOutput("GeneSetTable"), style = "font-size:10px; height:450px; overflow-Y: scroll")
+    div(DT::dataTableOutput("GeneSetTable"), style = "font-size:10px")
     
     
   })
