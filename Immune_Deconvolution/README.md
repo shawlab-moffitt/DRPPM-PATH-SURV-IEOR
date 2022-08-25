@@ -65,14 +65,45 @@ epic <- TRUE
 abis <- TRUE
 estimate <- TRUE
 ```
-* If the user would like to run the CIBERSORT methods please follow the instructions to obtain the proper files 
+* If the user would like to run the CIBERSORT methods please follow the instructions to obtain the proper files [in the installation step](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Immune_Deconvolution/README.md#immune-deconvolution-package)
+* The script must be able to find the required files in the paths provided
+  * If the CIBERSORT methods denote `TRUE` but the files are not found, the script will not run those methods
+```{r}
+cibersort <- TRUE
+cibersort_abs <- TRUE
+# CIBERSORT.R path and file name
+CIBERSORT_Script <- "Path/To/CIBERSORT.R"
+# LM22 path and file name
+LM22_File <- "Path/To/LM22.txt"
+```
 
+# Running the Script
 
+* When the set-up is complete the script can be run in sections if the user prefers, but should not be tampered with
+* It is recommended to run the script as a local job in R Studio
+  * On the bottom console of R Studio select the "Jobs" tab and select "Start a Local Job" then choose the edited script where you saved it and "DRPPM-PATH-SURVEIOR" as your working directory
+    * The working directory may be adjusted of not touched if the user includes absolute paths to the files
+* Please keep in mind, depending on the methods chosen and the size of the expression matrix the script may take several minutes to run
+<p align="center">
+  <img src="https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline/blob/main/Workflow_Picture/RStudio_LocalJob1.PNG?raw=true"/>
+  <img src="https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR-Pipeline/blob/main/Workflow_Picture/RStudio_LocalJob2.PNG?raw=true"/>
+</p>
 
+# Script Output
 
+Files will be output the the output path designated upon app set-up
 
+* **Immune Deconvolution Score File:**
+  * This will be a tab delimited file with the first column consiting of the sample names and the subsequent columns immune deconvolution scores name by cell type and method used to obtain the score
 
+* **Updated Meta File:**
+  * This will be output if a meta file is included during set-up
+  * It will be composed of the input meta file with added columns of immune deconvolution scores and the scores partitions into high/low based on median cut-point
+  * This updated file can be used with the updated meta parameter file as input to the [DRPPM-PATH-SURVEIOR App](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR)
 
-
+* **Updated Meta Parameter File:**
+  * This will be output if a meta parameter file is included during set-up
+  * If will be composed of the input meta parameter file with added rows of the column names of the immune deconvolution columns added to the meta and "Feature"
+  * This updated file can be used with the updated meta file as input to the [DRPPM-PATH-SURVEIOR App](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR)
 
 
