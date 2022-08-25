@@ -101,11 +101,13 @@ Files will be output the the output path designated upon app set-up
 * **Updated Meta File:**
   * This will be output if a meta file is included during set-up
   * It will be composed of the input meta file with added columns of immune deconvolution scores and the scores partitions into high/low based on median cut-point
+  * The added immune deconvolution columns are named in a way to be found by the [DRPPM-PATH-SURVEIOR App](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR) adn should not be tampered with
   * This updated file can be used with the updated meta parameter file as input to the [DRPPM-PATH-SURVEIOR App](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR)
 
 * **Updated Meta Parameter File:**
   * This will be output if a meta parameter file is included during set-up
   * If will be composed of the input meta parameter file with added rows of the column names of the immune deconvolution columns added to the meta and "Feature"
+  * The added immune deconvolution columns in each row are named in a way to be found by the [DRPPM-PATH-SURVEIOR App](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR) adn should not be tampered with
   * This updated file can be used with the updated meta file as input to the [DRPPM-PATH-SURVEIOR App](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR)
 
 
