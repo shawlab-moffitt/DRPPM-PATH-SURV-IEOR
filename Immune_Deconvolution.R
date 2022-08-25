@@ -28,9 +28,9 @@ cibersort <- TRUE
 cibersort_abs <- TRUE
 
 # CIBERSORT.R path and file name
-CIBERSORT_Script <- "~/R/data/Cibersort/cibersort/CIBERSORT.R"
+CIBERSORT_Script <- "path/to/CIBERSORT.R"
 # LM22 path and file name
-LM22_File <- "~/R/data/Cibersort/cibersort/LM22.txt"
+LM22_File <- "path/to/LM22.txt"
 
 
 
