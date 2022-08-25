@@ -2511,7 +2511,6 @@ server <- function(input, output, session) {
       surv_id_col <- metacol_survid[1]
     }
     
-    surv_time_col <- "OS.time"
     expr <- exprSub()
     meta_ssgsea <- ssGSEAmeta()
     
