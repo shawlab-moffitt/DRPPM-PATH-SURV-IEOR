@@ -1,9 +1,11 @@
 # Guide to Immune Deconvolution Pre-Processing
 
 
-# Intro
-why immune deconvolution is powerful
-why pre-rocess
+# Introduction
+
+Immune deconvolution allows the user the elucidate gene expression data and identify key cell populations identified across samples. The understanding of cell type composition allows for further clarification and additional infrances to be made on the data being examined which could be leveraged to find specific celltypes that may be used as therapeutic targets. When evaluating the cell type population scores, we can pair it with patient survival data to take a deeper look at how patients outcomes may be affected by the population levels of immune cell types. 
+
+Many computational methodologies have been developed which produce a variety of cell type categories for the user to delineate their samples. To consolidate this effort of manually running through each method separately, we have developed a simple plug and run script which allows users to run through an array of prominent methods, including marker gene based methods (MCP-counter, Xcell, ESTIMATE) and formula based deconvolution methoeds (quanTIseq,EPIC,CIBERSORT,ABIS). The output of this script can be examined on its own as just the samples and their deconvolution score, but these scores can further be appended onto the users existing meta data to be used as input to our [DRPPM-PATH-SURVEIOR App](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR). While the app can perform immune deconvolution using MCP-counter and ESTIMATE methods ir the R version is up to date, but is helpful if users want to perform a deconvolution methods that may take an extended amount of time, or the machine they run the application on does not have R v4.1 or greater.
 
 # R Requirments
 
