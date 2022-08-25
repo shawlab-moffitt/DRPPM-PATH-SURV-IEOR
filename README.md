@@ -4,7 +4,7 @@
 
 The integration of patient genome expression data, phenotypye data, and clinical data can serve as an integral resource for patient prognosis. DRPPM PATH SURVEIOR: **Path**way level **Surv**ival **E**xam**i**nat**or** serves to do just that, by examining the interaction of pathway analysis with patient expression and cilinical data to discover prominent features that take part in patient outcome. This utility is comprised of 3 R Shiny apps and a pipeline script which can be employed in a cohesive manor to provide an in-depth analysis towards pathway analysis of patient survival. Gene Set pathways utilized in this workflow include the Molecular Signatures Database (MSigDB), LINCS L1000 Small-Molecule Perturbations, and Clue.io ER Stress signtatures, as well as user provided gene sets. 
 
-Here we focus on the Interactive mode of this workflow with the DRPPM-PATH-SURVEIOR R Shiny App. With the expression, phenotype, and clincial data provided by the user we can integrate single sample GSEA (ssGSEA) pathway analysis with the comprehensive list of gene set pathways provided (or user provided). Additionally, upon app start-up, if the "immunedeconv" package is installed, immune deconvolution using ESTIMATE and MCP Counter methods will be performed. he score data is able to be partitioned and viewed in the survival plots or as a feature using median cut-point. The user can view a variety of survival plots based on binning the score data into quartile, quantile, and above/below median or look through the lense of univariate, bivariate, and multivariate analysis with the integration of additional phenotype and clincal patient data. Further data exploration is available within the app to observe ssGSEA score density across the cohort as well as box plots and heatmaps to examine risk and feature stratification. The Shiny app comes complete with the ability to subset your cohort of patients, upload your own gene set data, along with customization and download of plots and tables throughout the app.
+Here we focus on the Interactive mode of this workflow with the DRPPM-PATH-SURVEIOR R Shiny App. With the expression, phenotype, and clincial data provided by the user we can integrate single sample GSEA (ssGSEA) pathway analysis with the comprehensive list of gene set pathways provided (or user provided). Additionally, upon app start-up, if the "immunedeconv" package is installed, immune deconvolution using ESTIMATE and MCP Counter methods will be performed. The score data is able to be partitioned and viewed in the survival plots or as a feature using median cut-point. The user can view a variety of survival plots based on binning the score data into quartile, quantile, and above/below median or look through the lense of univariate, bivariate, and multivariate analysis with the integration of additional phenotype and clincal patient data. Further data exploration is available within the app to observe ssGSEA score density across the cohort as well as box plots and heatmaps to examine risk and feature stratification. The Shiny app comes complete with the ability to subset your cohort of patients, upload your own gene set data, along with customization and download of plots and tables throughout the app.
 
 An example app using the PAN ICI iAtlas Checkpoint data can be see here: http://shawlab.science/shiny/DRPPM_PATH_SURVEIOR_PAN_ICI_iAtlas_Survival_App/ and is free to explore. This is the app that would be set up with the test data provided in this GitHub.
 
@@ -40,10 +40,17 @@ To facilitate identifying significant genes and pathways for further analysis, w
 * Users are encouraged to pre-intall the packages for quicker initial start-up of the application
 * A package installation script is provided [R_Package_Installation.R](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/R_Package_Installation.R)
   * This is also in the app.R script in case the user does not pre-install
+
+### Immune Deconvolution
+
 * **Please note the immunedeconv package requires R version >= 4.1 to install**
-  * More information on this package can be found here: https://github.com/omnideconv/immunedeconv
+* More information on this package can be found here: https://github.com/omnideconv/immunedeconv
   * This package requires additional packages to install completely, once all is installed you only need to load the immundeconv package for the app
-  * The user may use the app without the package installed and it will work, but without the immune deconvolution data
+* The user may use the app without the package installed and it will work, but without the immune deconvolution data
+
+* The application processes MCP-counter and ESTIMATE deconvolution methods if the package is installed
+* The immune deconvolution scores may be pre-process with the help of the R script we developed, this will supply you with the application update file inputs if performed according to instructions.
+* More information found in the [Immune_Deconvolution folder](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/tree/main/Immune_Deconvolution) of this repository.
 
 ## Via Download
 
@@ -82,6 +89,8 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
     * A sample type column that allows for an initial subsetting of samples followed by grouping by feature (ex. Tissue or Disease Type)
     * Description column(s) that give additional information on the samples
   * An example file with data from the PAN ICI iAtlas study on Skin and Kidney cancer tissue is loacted here [Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_Skin_Kidney_Meta.txt)
+  * If you chose to perform the immune deconvolution pre-processing, the output meta data from that script should be used
+    * Example here: [Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_ImmDeconv.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_ImmDeconv.txt)
 
 * **Meta Data Parameters (.tsv/.txt):**
   * This should be a two-column tab-delimited file with the first column containing the column names of the meta file and the second column containing the column type of that meta column
@@ -95,6 +104,8 @@ git clone https://github.com/shawlab-moffitt/DRPPM-SURVIVE.git
     * **Feature:** Contains a feature that allows the samples to be grouped for analysis (More than one feature column allowed)
     * **Description:** Contains descriptions for the samples that may be viewed in the app (OPTIONAL)
   * Below is an example of these catagories and a full example file can be found here: [Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt)
+  * If you chose to perform the immune deconvolution pre-processing, the output meta data from that script should be used
+    * Example here: [Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_Params_ImmDeconv.txt](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/blob/main/Pan_ICI_Example_Data/PAN_ICI_Skin_Kidney_Meta_Params_ImmDeconv.txt)
 
 |  |  |
 | --- | --- |
@@ -150,6 +161,8 @@ MetaParam_File <- "Pan_ICI_Example_Data/Pan_ICI_iAtlas_MetaData_Params.txt"
 
 ## Advanced Set-Up
 
+### Pre-Set Selection Inputs
+
 * There is a section at the top of the app.R script to allow users to pre-select their sample selection to be loaded on app start up.
 * Users can select:
   * Sample Type choice with **PreSelect_SamplyType**
@@ -179,6 +192,12 @@ PreSelect_Feature <- "All"
 PreSelect_SubFeature <- NULL
 PreSelect_SecondaryFeature <- NULL
 ```
+
+### Immune Deconvolution
+
+Due to the variety of immune deconvolution methods available, we have developed a pre-processing script which allows the user to process through an array of different methods, add those features to the meta data and meta parameters, and view those results in correlation with survival data within the application.
+
+More information on the pre-processing of this data can be found in the [Immune_Deconvolution folder](https://github.com/shawlab-moffitt/DRPPM-PATH-SURVEIOR/tree/main/Immune_Deconvolution) of this repository
 
 # App Features
 
