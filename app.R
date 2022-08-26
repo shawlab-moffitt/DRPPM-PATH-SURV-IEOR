@@ -24,6 +24,7 @@ PreSelect_SecondaryFeature <- NULL
 # DO NOT CHANGE - only adjust file path if needed
 GeneSet_File <- "GeneSet_Data/GeneSet_List.RData"
 GeneSetTable_File <- "GeneSet_Data/GeneSet_CatTable.zip"
+About_MD_File <- "App_Markdowns/PurposeAndMethods.Rmd"
 
 
 
@@ -185,7 +186,11 @@ quantile_conversion2 = function(mat,cutoff) {
 
 
 ## Grab immune deconv columns if seen in meta
-immuneDeconv_meta_cols <- c(grep("_ImmDeconv$",colnames(meta),value = T),grep("_ImmDeconv_HiLoScore",colnames(meta),value = T))
+immuneDeconv_meta_cols <- c(grep("_ImmDeconv$",metacol_feature,value = T),grep("_ImmDeconv_HiLoScore$",metacol_feature,value = T))
+#immuneDeconv_meta_cols <- c(grep("_ImmDeconv$",colnames(meta),value = T),grep("_ImmDeconv_HiLoScore$",colnames(meta),value = T))
+#metacol_feature_noImmDeconv <- c(grep("_ImmDeconv$|_ImmDeconv_HiLoScore$",colnames(meta),value = T, invert = T))
+metacol_feature_noImmDeconv <- c(grep("_ImmDeconv$",metacol_feature,value = T, invert = T))
+decon_bin_cols <- c()
 decon_score_cols <- c()
 mcp_check <- FALSE
 est_check <- FALSE
@@ -194,8 +199,9 @@ est_check <- FALSE
 if (length(immuneDeconv_meta_cols) > 0) {
   
   ## Check in immune deconvolution scores were pre-processed
-  mcp_devonv_scores <- grep("mcp_counter_ImmDeconv$",colnames(meta),value = T)
+  mcp_devonv_scores <- grep("mcp_counter_ImmDeconv$",metacol_feature,value = T)
   if (length(mcp_devonv_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("mcp_counter_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     mcp_check <- TRUE
     decon_score_cols <- c(decon_score_cols,mcp_devonv_scores)
     mcp_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
@@ -213,8 +219,9 @@ if (length(immuneDeconv_meta_cols) > 0) {
     }
   }
   
-  estimate_scores <- grep("estimate_ImmDeconv$",colnames(meta),value = T)
+  estimate_scores <- grep("estimate_ImmDeconv$",metacol_feature,value = T)
   if (length(estimate_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("estimate_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     est_check <- TRUE
     decon_score_cols <- c(decon_score_cols,estimate_scores)
     estimate_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
@@ -232,8 +239,9 @@ if (length(immuneDeconv_meta_cols) > 0) {
     }
   }
   
-  quantiseq_scores <- grep("quantiseq_ImmDeconv$",colnames(meta),value = T)
+  quantiseq_scores <- grep("quantiseq_ImmDeconv$",metacol_feature,value = T)
   if (length(quantiseq_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("quantiseq_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     decon_score_cols <- c(decon_score_cols,quantiseq_scores)
     quantiseq_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
                                         GeneSet_Category = "Immune Deconvolution Cell Types",
@@ -250,8 +258,9 @@ if (length(immuneDeconv_meta_cols) > 0) {
     }
   }
   
-  xcell_scores <- grep("xcell_ImmDeconv$",colnames(meta),value = T)
+  xcell_scores <- grep("xcell_ImmDeconv$",metacol_feature,value = T)
   if (length(xcell_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("xcell_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     decon_score_cols <- c(decon_score_cols,xcell_scores)
     xcell_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
                                     GeneSet_Category = "Immune Deconvolution Cell Types",
@@ -268,8 +277,9 @@ if (length(immuneDeconv_meta_cols) > 0) {
     }
   }
   
-  epic_scores <- grep("epic_ImmDeconv$",colnames(meta),value = T)
+  epic_scores <- grep("epic_ImmDeconv$",metacol_feature,value = T)
   if (length(epic_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("epic_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     decon_score_cols <- c(decon_score_cols,epic_scores)
     epic_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
                                    GeneSet_Category = "Immune Deconvolution Cell Types",
@@ -286,8 +296,9 @@ if (length(immuneDeconv_meta_cols) > 0) {
     }
   }
   
-  abis_scores <- grep("abis_ImmDeconv$",colnames(meta),value = T)
+  abis_scores <- grep("abis_ImmDeconv$",metacol_feature,value = T)
   if (length(abis_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("abis_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     decon_score_cols <- c(decon_score_cols,abis_scores)
     abis_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
                                    GeneSet_Category = "Immune Deconvolution Cell Types",
@@ -304,8 +315,9 @@ if (length(immuneDeconv_meta_cols) > 0) {
     }
   }
   
-  cibersort_scores <- grep("cibersort_ImmDeconv$",colnames(meta),value = T)
+  cibersort_scores <- grep("cibersort_ImmDeconv$",metacol_feature,value = T)
   if (length(cibersort_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("cibersort_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     decon_score_cols <- c(decon_score_cols,cibersort_scores)
     cibersort_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
                                         GeneSet_Category = "Immune Deconvolution Cell Types",
@@ -322,8 +334,9 @@ if (length(immuneDeconv_meta_cols) > 0) {
     }
   }
   
-  cibersort_abs_scores <- grep("cibersort_abs_ImmDeconv$",colnames(meta),value = T)
+  cibersort_abs_scores <- grep("cibersort_abs_ImmDeconv$",metacol_feature,value = T)
   if (length(cibersort_abs_scores) > 0) {
+    decon_bin_cols <- c(decon_bin_cols,grep("cibersort_abs_ImmDeconv_HiLoScore$",metacol_feature,value = T))
     decon_score_cols <- c(decon_score_cols,cibersort_abs_scores)
     cibersort_abs_decon_gstab <- data.frame(GeneSet_Database = "Immune Deconvolution Scores",
                                             GeneSet_Category = "Immune Deconvolution Cell Types",
@@ -346,7 +359,6 @@ if (length(immuneDeconv_meta_cols) > 0) {
 
 ## If they were not pre-processed, process mcp counter and estimate methods
 
-decon_bin_cols <- c()
 
 if (immudecon_check == TRUE) {
   
@@ -451,7 +463,7 @@ if (immudecon_check == TRUE) {
 decon_score_cols <- gsub("_ImmDeconv","",decon_score_cols)
 decon_bin_cols <- gsub("_ImmDeconv","",decon_bin_cols)
 
-metacol_feature <- c(metacol_feature,decon_bin_cols,decon_score_cols)
+metacol_feature <- c(metacol_feature_noImmDeconv,decon_bin_cols,decon_score_cols)
 colnames(meta) <- gsub("_ImmDeconv","",colnames(meta))
 
 
@@ -480,13 +492,20 @@ ui <-
                                        uiOutput("rendSampleTypeSelection"),
                                        uiOutput("rendFeatureSelection"),
                                        uiOutput("rendSubFeatureSelection"),
+                                       fluidRow(
+                                         column(6,
+                                                uiOutput("rendSurvivalType_time")
+                                         ),
+                                         column(6,
+                                                uiOutput("rendSurvivalType_id")
+                                         )
+                                       ),
                                        uiOutput("rendScoreMethodBox"),
                                        tabsetPanel(
                                          id = "GeneSetTabs",
                                          tabPanel("Gene Sets",
                                                   p(),
-                                                  selectInput("GeneSetCat_Select","Select Category",
-                                                              choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures","Immune Deconvolution Scores")),
+                                                  uiOutput("rendGeneSetCat_Select"),
                                                   uiOutput("rendGeneSetTable"),
                                                   value = 1
                                          ),
@@ -509,25 +528,24 @@ ui <-
                               
                               ##--Survival Parameters--##
                               
-                              tabPanel("Survival Parameters",
+                              tabPanel("Risk Strat Parameters",
                                        p(),
-                                       h3("Survival Data Type"),
-                                       column(6,
-                                              uiOutput("rendSurvivalType_time")
-                                       ),
-                                       column(6,
-                                              uiOutput("rendSurvivalType_id")
-                                       ),
-                                       hr(),
+                                       #h3("Survival Event Type"),
+                                       #column(6,
+                                       #       uiOutput("rendSurvivalType_time")
+                                       #),
+                                       #column(6,
+                                       #       uiOutput("rendSurvivalType_id")
+                                       #),
                                        h3("Risk Stratification Plot Parameters"),
                                        fluidRow(
                                          column(6,
                                                 numericInput("cutoffTime1","High-Risk Survival Time Cutoff:", value = 364, min = 0, step = 1),
-                                                selectInput("survStatus1","Survival Status Below Cutoff:", choices = c("1","0","Both"), selected = "1")
+                                                selectInput("survStatus1","Survival Status Below Cutoff:", choices = c("1","0","0/1"), selected = "1")
                                          ),
                                          column(6,
                                                 numericInput("cutoffTime0","Low-Risk Survival Time Cutoff:", value = 365, min = 0, step = 1),
-                                                selectInput("survStatus0","Survival Status Above Cutoff:", choices = c("1","0","Both"), selected = "0")
+                                                selectInput("survStatus0","Survival Status Above Cutoff:", choices = c("1","0","0/1"), selected = "0")
                                          )
                                        )
                               ),
@@ -1048,14 +1066,14 @@ ui <-
                                                   downloadButton("dnldssgseaDensityTable","Download Table"),
                                                   value = 6),
                                          tabPanel("Risk Straification Boxplot",
-                                                  p(),
+                                                  p("Users may adjust risk-stratification cutoff parameters under the 'Risk Strat Parameters' tab on the sidebar panel."),
                                                   withSpinner(jqui_resizable(plotOutput("Sboxplot", width = "100%", height = "500px")), type = 6),
                                                   div(DT::dataTableOutput("SboxplotTable"), style = "font-size:12px; height:450px; overflow-Y: scroll"),
                                                   p(),
                                                   downloadButton("dnldSBoxplotTab","Download Table"),
                                                   value = 1),
                                          tabPanel("Risk Straification Heatmap",
-                                                  p(),
+                                                  p("Users may adjust risk-stratification cutoff parameters under the 'Risk Strat Parameters' tab on the sidebar panel."),
                                                   uiOutput("heatmap_error_message"),
                                                   withSpinner(jqui_resizable(plotOutput("Sheatmap", width = "100%", height = "2000px")), type = 6),
                                                   downloadButton("dnldSheatmapexpr","Download Expression Matrix From Heatmap"),
@@ -1078,6 +1096,15 @@ ui <-
                                        )
                               )
                             )
+                          )
+                        )
+                      )
+             ),
+             tabPanel("About",
+                      fluidPage(
+                        mainPanel(
+                          tabPanel("Purpose and Methods",
+                                   uiOutput("rendPurposeAndMethodsMD")
                           )
                         )
                       )
@@ -1179,7 +1206,7 @@ server <- function(input, output, session) {
         if (input$FeatureSelection != "All_Features") {
           metacol_feature <- metacol_feature[-which(metacol_feature == input$FeatureSelection)]
         }
-        metacol_feature <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
+        metacol_feature <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
                     choices = metacol_feature, selected = PreSelect_SecondaryFeature)
         
@@ -1187,21 +1214,19 @@ server <- function(input, output, session) {
       else if (input$SampleTypeSelection == "All_Sample_Types") {
         
         
-        SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature)
+        SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
         if (input$FeatureSelection != "All_Features") {
           SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
         }
-        SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
         selectInput("SingleSurvivalFeature","Select Feature:",
                     choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
         
       }
     }
     else if (length(unique(meta[,metacol_sampletype])) <= 1) {
-      SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature)
+      SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
       if (input$FeatureSelection != "All_Features") {
         SurvFeatChoices2 <- SurvFeatChoices2[-which(SurvFeatChoices2 == input$FeatureSelection)]
-        SurvFeatChoices2 <- c(SurvFeatChoices2,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
       }
       selectInput("SingleSurvivalFeature","Select Feature:",
                   choices = SurvFeatChoices2, selected = PreSelect_SecondaryFeature)
@@ -1213,8 +1238,8 @@ server <- function(input, output, session) {
     
     geneset <- gs_react()
     geneset_name <- names(geneset)
-    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
-    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
+    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
+    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
     
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
@@ -1250,8 +1275,8 @@ server <- function(input, output, session) {
     
     geneset <- gs_react()
     geneset_name <- names(geneset)
-    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
-    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
+    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
+    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
     
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
@@ -1287,8 +1312,8 @@ server <- function(input, output, session) {
     
     geneset <- gs_react()
     geneset_name <- names(geneset)
-    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
-    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
+    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
+    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
     
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
@@ -1324,8 +1349,8 @@ server <- function(input, output, session) {
     
     geneset <- gs_react()
     geneset_name <- names(geneset)
-    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
-    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
+    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
+    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
     
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
@@ -1361,8 +1386,8 @@ server <- function(input, output, session) {
     
     geneset <- gs_react()
     geneset_name <- names(geneset)
-    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
-    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","QuantCutoffPScore")
+    SurvFeatChoices <- c(metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
+    SurvFeatChoices2 <- c(metacol_sampletype,metacol_feature,geneset_name,"QuartilePScore","HiLoPScore","OptimalCutPoint","QuantCutoffPScore","AboveBelowCutoffPScore")
     
     if (length(unique(meta[,metacol_sampletype])) > 1) {
       if (input$SampleTypeSelection != "All_Sample_Types") {
@@ -1753,6 +1778,44 @@ server <- function(input, output, session) {
     if (input$ShowCutPointHR == T) {
       div(withSpinner(tableOutput("CutPointHRtab"), type = 7, size = 0.5), style = "font-size:10px")
     }    
+    
+  })
+  
+  output$rendPurposeAndMethodsMD <- renderUI({
+    
+    if (file.exists(About_MD_File)) {
+      
+      includeMarkdown(About_MD_File)
+      
+    }
+    else {
+      p("Page requires PurposeAndMethods.Rmd to be found")
+    }
+    
+  })
+  #output$rendTutorialMD <- renderUI({
+  #  
+  #  if (file.exists("App_Markdowns/Tutorial.Rmd")) {
+  #    
+  #    includeMarkdown("App_Markdowns/Tutorial.Rmd")
+  #    
+  #  }
+  #  else {
+  #    p("Page requires App_Markdowns/Tutorial.Rmd to be found")
+  #  }
+  #  
+  #})
+  
+  output$rendGeneSetCat_Select <- renderUI({
+    
+    if (length(decon_score_cols) > 0) {
+      selectInput("GeneSetCat_Select","Select Category",
+                  choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures","Immune Deconvolution Scores"))
+    }
+    else {
+      selectInput("GeneSetCat_Select","Select Category",
+                  choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures"))
+    }
     
   })
   
@@ -2166,6 +2229,18 @@ server <- function(input, output, session) {
         
       }
     }
+    
+    ##--Optimal cutpoint analysis--##
+    
+    ## Subset columns needed for plot and rename for surv function
+    meta_ssgsea_sdf <- merge(meta[,c("SampleName",surv_time_col,surv_id_col)],ssGSEA[,c("SampleName",geneset_name)], by = "SampleName")
+    #geneset_name <- gsub("[[:punct:]]","_",geneset_name)
+    #colnames(meta_ssgsea_sdf)[4] <- gsub("[[:punct:]]","_",colnames(meta_ssgsea_sdf)[4])
+    
+    res.cut <- surv_cutpoint(meta_ssgsea_sdf,time = surv_time_col, event = surv_id_col, variable = geneset_name)
+    res.cat <- surv_categorize(res.cut)
+    
+    ssGSEA$OptimalCutPoint <- res.cat[,3]
     
     ## Perform further functions
     ssGSEA$VAR_Q <- quartile_conversion(ssGSEA[, which(colnames(ssGSEA) == geneset_name)])
@@ -5774,7 +5849,7 @@ server <- function(input, output, session) {
       geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
       geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
       labs(x = "Group", y = paste(GeneSet," ",scoreMethod, " Score", sep = ""),
-           title = paste(GeneSet,scoreMethod," Score: ",Feature,SampleTypeLab,"Patients",sep = "")) +
+           title = paste(GeneSet," ",scoreMethod," Score: ",Feature,SampleTypeLab,"Patients",sep = "")) +
       theme_bw() +
       stat_compare_means(method = input$boxoptselec) +
       theme(text = element_text(size = font))
@@ -5923,7 +5998,7 @@ server <- function(input, output, session) {
         geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
         geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
         labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-             title = paste(GeneSet,scoreMethod," Score: ","\n",
+             title = paste(GeneSet," ",scoreMethod," Score: ","\n",
                            Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
              fill = FeatureSelec) +
         theme_bw() +
@@ -5938,7 +6013,7 @@ server <- function(input, output, session) {
           geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
           geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
           labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-               title = paste(GeneSet,scoreMethod," Score: ","\n",
+               title = paste(GeneSet," ",scoreMethod," Score: ","\n",
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
@@ -5950,7 +6025,7 @@ server <- function(input, output, session) {
           geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
           geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
           labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-               title = paste(GeneSet,scoreMethod," Score: ","\n",
+               title = paste(GeneSet," ",scoreMethod," Score: ","\n",
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
@@ -5963,7 +6038,7 @@ server <- function(input, output, session) {
           geom_boxplot(width = 0.5, lwd = 1, fill = "white") +
           geom_dotplot(binaxis = 'y', stackdir = "center", dotsize = dot) +
           labs(x = "Group", y = paste(GeneSet," ",scoreMethod," Score", sep = ""),
-               title = paste(GeneSet,scoreMethod," Score: ","\n",
+               title = paste(GeneSet," ",scoreMethod," Score: ","\n",
                              Feature,SampleTypeLab,"Patients Featuring ",FeatureSelec,sep = ""),
                fill = FeatureSelec) +
           theme_bw() +
@@ -6189,7 +6264,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6229,7 +6309,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6270,7 +6355,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6310,7 +6400,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6324,6 +6419,97 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       p <- SplotBIN_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  ## quartile
+  output$dnldScutPointPlot_SVG <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.svg",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.svg",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ScutPointPlot_react()
+      ggsave(file,p$plot,width = 10, height = 8)
+      
+    }
+  )
+  
+  output$dnldScutPointPlot_PDF <- downloadHandler(
+    filename = function() {
+      geneset <- gs_react()
+      geneset_name <- names(geneset)
+      Feature <- input$FeatureSelection
+      scoreMethod <- input$ScoreMethod
+      if (Feature != "All_Features") {
+        SubFeature <- paste("_",input$subFeatureSelection,"_",sep = "")
+      }
+      if (Feature == "All_Features") {
+        SubFeature <- "_"
+      }
+      if (input$GeneSetTabs == 2) {
+        if (input$RawOrSS == "Raw Gene Expression") {
+          scoreMethodLab <- "RawGeneExpression"
+        }
+        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      else if (input$GeneSetTabs != 2) {
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
+      }
+      # If more than one sample type
+      if (length(unique(meta[,metacol_sampletype])) > 1) {
+        SampleType <- input$SampleTypeSelection
+        paste(gsub(" ","",ProjectName),"_",SampleType,"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.pdf",sep = "")
+      }
+      # If only one sample type
+      else if (length(unique(meta[,metacol_sampletype])) <= 1) {
+        paste(gsub(" ","",ProjectName),"_",Feature,SubFeature,"_",geneset_name,"_",scoreMethodLab,"_OptimalCutpointSurvival.pdf",sep = "")
+      }
+    },
+    content = function(file) {
+      p <- ScutPointPlot_react()
       ggsave(file,p$plot,width = 10, height = 8)
       
     }
@@ -6351,7 +6537,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6391,7 +6582,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6432,7 +6628,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6472,7 +6673,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6514,7 +6720,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6555,7 +6766,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6598,7 +6814,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6640,7 +6861,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6681,7 +6907,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
@@ -6720,7 +6951,12 @@ server <- function(input, output, session) {
         }
       }
       else if (input$GeneSetTabs != 2) {
-        scoreMethodLab <- scoreMethod
+        if (geneset_name %in% decon_score_cols) {
+          scoreMethodLab <- "ImmuneDeconv"
+        }
+        else {
+          scoreMethodLab <- scoreMethod
+        }
       }
       # If more than one sample type
       if (length(unique(meta[,metacol_sampletype])) > 1) {
