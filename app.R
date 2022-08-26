@@ -517,7 +517,12 @@ ui <-
                                                   value = 2
                                          ),
                                          tabPanel("User Gene Set",
-                                                  fileInput("userGeneSet","Gene Set Upload", accept = c(".gmt",".tsv",".txt",".RData")),
+                                                  p(),
+                                                  radioButtons("UserGSoption","",choices = c("Gene Set Upload","Text Box Input"), inline = T),
+                                                  uiOutput("renduserGeneSet"),
+                                                  uiOutput("renduserGeneSetText"),
+                                                  verbatimTextOutput("testtext"),
+                                                  #fileInput("userGeneSet","Gene Set Upload", accept = c(".gmt",".tsv",".txt",".RData")),
                                                   uiOutput("rendUserGeneSetTable"),
                                                   value = 3
                                          )
@@ -1105,6 +1110,12 @@ ui <-
                         mainPanel(
                           tabPanel("Purpose and Methods",
                                    uiOutput("rendPurposeAndMethodsMD")
+                                   #tabsetPanel(
+                                   #  tabPanel("Purpose and Methods",
+                                   #           uiOutput("rendPurposeAndMethodsMD")),
+                                   #  tabPanel("Tutorial",
+                                   #           uiOutput("rendTutorialMD"))
+                                   #)
                           )
                         )
                       )
@@ -1725,7 +1736,9 @@ server <- function(input, output, session) {
     else if (input$GeneSetTabs == 3) {
       
       req(input$userGeneSet)
-      checkboxInput("ViewGeneSetGenes","View Genes in Selected Gene Set", value = F)
+      if (input$UserGSoption == "Gene Set Upload") {
+        checkboxInput("ViewGeneSetGenes","View Genes in Selected Gene Set", value = F)
+      }
       
     }
     
@@ -1815,6 +1828,26 @@ server <- function(input, output, session) {
     else {
       selectInput("GeneSetCat_Select","Select Category",
                   choices = c("MSigDB","LINCS L1000","Cell Marker","ER Stress","Immune Signatures"))
+    }
+    
+  })
+  
+  output$renduserGeneSet <- renderUI({
+    
+    if (input$UserGSoption == "Gene Set Upload") {
+      
+      fileInput("userGeneSet","Gene Set Upload", accept = c(".gmt",".tsv",".txt",".RData"))
+      
+    }
+    
+  })
+  
+  output$renduserGeneSetText <- renderUI({
+    
+    if (input$UserGSoption == "Text Box Input") {
+      
+      textInput("userGeneSetText","Type in Gene Symbols", placeholder = "Comma, space, or tab delimited")
+      
     }
     
   })
@@ -1946,13 +1979,16 @@ server <- function(input, output, session) {
   output$userGeneSetTable <- renderDataTable({
     
     req(input$userGeneSet)
-    uGS_table <- userGeneSetTable_backend()
-    DT::datatable(uGS_table,
-                  options = list(lengthMenu = c(5,10, 20, 100, 1000),
-                                 pageLength = 10,
-                                 scrollX = T),
-                  selection = list(mode = 'single', selected = 1),
-                  rownames = F)
+    if (input$UserGSoption == "Gene Set Upload") {
+      uGS_table <- userGeneSetTable_backend()
+      DT::datatable(uGS_table,
+                    options = list(lengthMenu = c(5,10, 20, 100, 1000),
+                                   pageLength = 10,
+                                   scrollX = T),
+                    selection = list(mode = 'single', selected = 1),
+                    rownames = F)
+    }
+    
     
   })
   
@@ -2036,6 +2072,24 @@ server <- function(input, output, session) {
     
   })
   
+  user_gs_text <- reactive({
+    
+    if (input$GeneSetTabs == 3) {
+      
+      user_gs_text <- input$userGeneSetText
+      gs_text_s <- unlist(strsplit(user_gs_text, " "))
+      gs_text_t <- unlist(strsplit(user_gs_text, "\t"))
+      gs_text_c <- unlist(strsplit(user_gs_text, ","))
+      
+      gs_text <- unique(c(gs_text_s,gs_text_t,gs_text_c))
+      
+      gs_u_text <- list(User_GeneSet = gs_text)
+      gs_u_text
+      
+    }
+    
+  })
+  
   ## User gene set list reactive
   user_gs <- reactive({
     
@@ -2102,18 +2156,27 @@ server <- function(input, output, session) {
         }
       }
     }
-    if (input$GeneSetTabs == 2) {
+    else if (input$GeneSetTabs == 2) {
       gene <- GeneGS_table[input$geneGeneSetTable_rows_selected,1]
       geneset <- list(gene = gene)
       names(geneset)[1] <- gene
     }
-    if (input$GeneSetTabs == 3) {
-      req(input$userGeneSet)
-      gs_u <- user_gs()
-      uGS_table <- userGeneSetTable_backend()
-      geneset <- gs_u[(uGS_table[input$userGeneSetTable_rows_selected,1])]
+    else if (input$GeneSetTabs == 3) {
+      if (input$UserGSoption == "Gene Set Upload") {
+        req(input$userGeneSet)
+        gs_u <- user_gs()
+        uGS_table <- userGeneSetTable_backend()
+        geneset <- gs_u[(uGS_table[input$userGeneSetTable_rows_selected,1])]
+      }
+      else if (input$UserGSoption == "Text Box Input") {
+        req(input$userGeneSetText)
+        geneset <- user_gs_text()
+      }
+      
     }
+    
     geneset
+    
     
   })
   
@@ -2201,12 +2264,24 @@ server <- function(input, output, session) {
       }
     }
     else if (input$GeneSetTabs == 3) {
-      ## Perform ssGSEA with gs and new subset data
-      scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
-      ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
-      ## Transform
-      ssGSEA <- as.data.frame(t(ssGSEA))
-      ssGSEA$SampleName <- rownames(ssGSEA)
+      if (input$UserGSoption == "Gene Set Upload") {
+        ## Perform ssGSEA with gs and new subset data
+        scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
+        ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
+        ## Transform
+        ssGSEA <- as.data.frame(t(ssGSEA))
+        ssGSEA$SampleName <- rownames(ssGSEA)
+      }
+      else if (input$UserGSoption == "Text Box Input") {
+        #if (length())
+        ## Perform ssGSEA with gs and new subset data
+        scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
+        ssGSEA <- gsva(expr_mat,geneset,method = scoreMethod)
+        ## Transform
+        ssGSEA <- as.data.frame(t(ssGSEA))
+        ssGSEA$SampleName <- rownames(ssGSEA)
+      }
+      
     }
     else if (input$GeneSetTabs == 2) {
       
@@ -2218,7 +2293,7 @@ server <- function(input, output, session) {
         ssGSEA <- expr_sub3
         
       }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      else if (input$RawOrSS == "Rank Normalized") {
         
         ## Perform ssGSEA with gs and new subset data
         scoreMethod <- input$ScoreMethod      #ssGSEA score method chosen
@@ -2229,6 +2304,12 @@ server <- function(input, output, session) {
         
       }
     }
+    
+    #if (input$UserGSoption == "Text Box Input") {
+    #  if (length(user_gs_text()) > 1) {
+    #    
+    #  }
+    #}
     
     ##--Optimal cutpoint analysis--##
     
@@ -6161,7 +6242,7 @@ server <- function(input, output, session) {
         scoreMethodLab <- "Raw Gene Expression Density"
         scoreMethodLab_x <- "Raw Gene Expression"
       }
-      else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+      else if (input$RawOrSS == "Rank Normalized") {
         scoreMethodLab <- paste(scoreMethod, " Score Density", sep = "")
         scoreMethodLab_x <- paste(scoreMethod, " Score", sep = "")
       }
@@ -6259,7 +6340,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6304,7 +6385,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6350,7 +6431,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6395,7 +6476,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6441,7 +6522,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6486,7 +6567,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6532,7 +6613,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6577,7 +6658,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6623,7 +6704,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6668,7 +6749,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6715,7 +6796,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6761,7 +6842,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6809,7 +6890,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6856,7 +6937,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6902,7 +6983,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
@@ -6946,7 +7027,7 @@ server <- function(input, output, session) {
         if (input$RawOrSS == "Raw Gene Expression") {
           scoreMethodLab <- "RawGeneExpression"
         }
-        else if (input$RawOrSS == "ssGSEA Rank Normalized") {
+        else if (input$RawOrSS == "Rank Normalized") {
           scoreMethodLab <- scoreMethod
         }
       }
